@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Boutique</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Gestion de la Boutique ✈️</h1>
+    <button onclick="location.href='index.html'">🏠 Retour Accueil</button>
+  </header>
+
+  <main>
+    <div id="admin-panel" style="display: none; padding: 1rem;">
+      <h2>🛒 Avions en Boutique</h2>
+      <div id="plane-list" style="margin-bottom: 2rem;"></div>
+
+      <h2>➕ Ajouter un Avion</h2>
+      <form id="add-plane-form">
+        <input type="text" id="plane-name" placeholder="Nom de l'avion" required />
+        <input type="number" id="plane-price" placeholder="Prix en crédits" required />
+        <button type="submit">Ajouter</button>
+      </form>
+    </div>
+
+    <div id="access-denied" style="display: none; color: red; text-align: center; margin-top: 2rem;">
+      <p>🚫 Accès refusé. Cette page est réservée à l'administrateur.</p>
+    </div>
+  </main>
+
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>
