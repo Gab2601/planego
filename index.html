@@ -2,129 +2,74 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Hangar Avion</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #e3f2fd;
-    }
-    header {
-      background: #0288d1;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1rem;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      background: #0288d1;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .section {
-      display: none;
-      padding: 2rem;
-      text-align: center;
-    }
-    #login-section input {
-      display: block;
-      margin: 0.5rem auto;
-      padding: 0.5rem;
-      width: 250px;
-    }
-    .item {
-      background: white;
-      padding: 1rem;
-      margin: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: inline-block;
-      width: 200px;
-    }
-    .item img {
-      width: 100%;
-      border-radius: 8px;
-    }
-    .buy-btn {
-      margin-top: 0.5rem;
-      padding: 0.5rem;
-      background: #43a047;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      background: white;
-      margin: 1rem auto;
-      padding: 1rem;
-      width: 300px;
-      border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-  </style>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0288d1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
-    <h1>✈️ Hangar Avion</h1>
-    <div id="user-info"></div>
+    <button id="profile-btn" style="background: none; border: none;">
+      <img src="/default-avatar.png" id="avatar" alt="Avatar" />
+      <span id="points">0 pts</span>
+    </button>
+    <nav>
+      <button class="btn" onclick="showSection('photo')">📸 Photo</button>
+      <button class="btn" onclick="showSection('shop')">🏪 Boutique</button>
+      <button class="btn" onclick="showSection('hangar')">🛩️ Hangar</button>
+    </nav>
   </header>
 
-  <nav>
-    <button class="btn" onclick="showSection('login')">👤 Connexion</button>
-    <button class="btn" onclick="showSection('shop')">🏪 Boutique</button>
-    <button class="btn" onclick="showSection('hangar')">🛩️ Mon Hangar</button>
-  </nav>
+  <div id="profile-modal">
+    <p><strong>Crédits :</strong> <span id="credits">0</span></p>
+    <p><strong>Avions :</strong> <span id="planes-count">0</span></p>
+    <input type="file" id="avatar-upload" accept="image/*" />
+    <button onclick="logout()">Déconnexion</button>
+  </div>
 
-  <div id="login" class="section">
+  <section id="login-section" class="section" style="display: block;">
     <h2>Connexion</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Mot de passe" />
-    <button class="btn" onclick="login()">Se connecter</button>
+    <button class="btn" onclick="login()">Connexion</button>
     <hr />
-    <h3>Pas encore de compte ?</h3>
-    <input type="email" id="email-signup" placeholder="Email" />
-    <input type="password" id="password-signup" placeholder="Mot de passe" />
+    <h3>Ou inscription</h3>
     <button class="btn" onclick="signup()">Créer un compte</button>
-  </div>
+  </section>
 
-  <div id="shop" class="section">
+  <section id="photo" class="section">
+    <h2>📸 Prends une photo d’un avion !</h2>
+    <input type="file" accept="image/*" capture="environment" id="photo-input">
+  </section>
+
+  <section id="shop" class="section">
     <h2>🏪 Boutique</h2>
-    <div id="shop-container"></div>
-  </div>
+    <div id="shop-items">
+      <!-- Les avions seront insérés ici -->
+    </div>
+  </section>
 
-  <div id="hangar" class="section">
-    <h2>🛩️ Mon Hangar</h2>
+  <section id="hangar" class="section">
+    <h2>🛩️ Ton Hangar</h2>
     <ul id="hangar-list"></ul>
-  </div>
+  </section>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://ixntiwcgvljrjbjnfjti.supabase.co',
-      'ta_clé_publique_supabase'
-    );
-
+    const supabase = createClient('https://ixntiwcgvljrjbjnfjti.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'); // Remplace par ta clé anonyme publique
     let user = null;
 
+    const items = [
+      { name: "F16", price: 3000 },
+      { name: "A400M", price: 2000 },
+      { name: "A380", price: 1500 }
+    ];
+
     function showSection(id) {
-      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
+      document.querySelectorAll(".section").forEach(s => s.style.display = "none");
+      document.getElementById(id).style.display = "block";
     }
 
     async function login() {
@@ -136,73 +81,105 @@
     }
 
     async function signup() {
-      const email = document.getElementById('email-signup').value;
-      const password = document.getElementById('password-signup').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) return alert(error.message);
-      alert("Compte créé ! Vérifie tes emails.");
+      
     }
 
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         user = session.user;
-        document.getElementById('user-info').textContent = `Connecté en tant que ${user.email}`;
+        document.getElementById('login-section').style.display = 'none';
+        showSection('photo');
+        loadProfile();
         loadShop();
         loadHangar();
       }
     }
 
-    async function loadShop() {
-      const { data: items } = await supabase.from('shop_items').select('*');
-      const container = document.getElementById('shop-container');
-      container.innerHTML = '';
+    async function logout() {
+      await supabase.auth.signOut();
+      location.reload();
+    }
 
+    async function loadProfile() {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (!profile) return;
+      document.getElementById('points').textContent = `${profile.points} pts`;
+      document.getElementById('credits').textContent = profile.credits;
+      document.getElementById('planes-count').textContent = profile.planes || 0;
+      if (profile.avatar_url) {
+        document.getElementById('avatar').src = profile.avatar_url;
+      }
+    }
+
+    document.getElementById('profile-btn').onclick = () => {
+      const modal = document.getElementById('profile-modal');
+      modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    };
+
+    document.getElementById('avatar-upload').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file || !user) return;
+      const filename = `avatars/${user.id}.jpg`;
+      const { data, error } = await supabase.storage.from('avatars').upload(filename, file, { upsert: true });
+      if (error) return alert("Erreur avatar : " + error.message);
+      const { data: publicUrl } = supabase.storage.from('avatars').getPublicUrl(filename);
+      await supabase.from('profiles').update({ avatar_url: publicUrl.publicUrl }).eq('id', user.id);
+      document.getElementById('avatar').src = publicUrl.publicUrl;
+    });
+
+    document.getElementById('photo-input').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file || !user) return;
+      const filename = `photos/${user.id}/${Date.now()}.jpg`;
+      const { data, error } = await supabase.storage.from('photos').upload(filename, file);
+      if (error) return alert("Erreur envoi : " + error.message);
+      const url = supabase.storage.from('photos').getPublicUrl(filename).data.publicUrl;
+      await supabase.from('photos').insert({ user_id: user.id, url });
+      await supabase.rpc('increment_profile_points_credits', { uid: user.id });
+      alert("📸 Photo enregistrée !");
+      loadProfile();
+    });
+
+    function loadShop() {
+      const container = document.getElementById('shop-items');
+      container.innerHTML = '';
       items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'item';
         div.innerHTML = `
-          <img src="${item.image_url || 'https://via.placeholder.com/200x100?text=Avion'}">
           <h3>${item.name}</h3>
           <p>${item.price} crédits</p>
-          <button class="buy-btn" onclick="buyPlane(${item.id})">Acheter</button>
+          <button class="buy-btn" onclick="buyItem('${item.name}', ${item.price})">Acheter</button>
         `;
         container.appendChild(div);
       });
     }
 
-    window.buyPlane = async function(planeId) {
-      if (!user) return alert("Connecte-toi !");
-      const { error } = await supabase.rpc('buy_plane', {
-        uid: user.id,
-        plane_id: planeId
-      });
-      if (error) {
-        alert("Erreur achat : " + error.message);
-      } else {
-        alert("✅ Avion acheté !");
-        loadHangar();
-      }
-    }
+    window.buyItem = async (name, price) => {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (profile.credits < price) return alert("Pas assez de crédits !");
+      await supabase.from('profiles').update({
+        credits: profile.credits - price,
+        planes: (profile.planes || 0) + 1
+      }).eq('id', user.id);
+      await supabase.from('hangar').insert({ user_id: user.id, plane: name });
+      alert(`${name} acheté !`);
+      loadProfile();
+      loadHangar();
+    };
 
     async function loadHangar() {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('user_planes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('acquired_at', { ascending: false });
-
+      const { data, error } = await supabase.from('hangar').select('*').eq('user_id', user.id);
       const list = document.getElementById('hangar-list');
       list.innerHTML = '';
-      if (!data || data.length === 0) {
-        list.innerHTML = '<li>Tu n’as aucun avion.</li>';
-        return;
-      }
-
-      data.forEach(plane => {
+      data.forEach(entry => {
         const li = document.createElement('li');
-        li.textContent = `✈️ ${plane.plane_name} (acheté le ${new Date(plane.acquired_at).toLocaleDateString()})`;
+        li.textContent = entry.plane;
         list.appendChild(li);
       });
     }
