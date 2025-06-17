@@ -1,138 +1,187 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Hangar Avion</title>
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="manifest" href="/manifest.json" />
-<link rel="apple-touch-icon" href="/icon-192.png">
-<meta name="theme-color" content="#0288d1">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js');
-  }
-</script>
-
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0288d1">
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to bottom, #e0f7fa, #ffffff);
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #e0f2f1, #ffffff);
+      padding: 0;
     }
 
     header {
-      background-color: #0288d1;
-      color: white;
-      padding: 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background: #0288d1;
+      color: white;
+      padding: 1rem;
     }
 
-    .left-section, .right-section {
+    #profile-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
       display: flex;
       align-items: center;
+    }
+
+    #profile-btn img {
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin-right: 0.5rem;
+    }
+
+    #profile-modal {
+      position: absolute;
+      top: 70px;
+      left: 10px;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .top-buttons {
+      display: flex;
       gap: 1rem;
     }
 
-    .points {
+    .top-buttons button {
+      background: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
       font-weight: bold;
-    }
-
-    .profile-img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid white;
       cursor: pointer;
     }
 
     main {
-      max-width: 1000px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-
-    #hangar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-    }
-
-    .plane-card {
-      background-color: #ffffff;
-      border-radius: 12px;
-      padding: 1rem;
-      width: 200px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 2rem;
       text-align: center;
     }
 
-    .top-right-buttons {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+    #photo-input {
+      margin: 2rem auto;
+      display: block;
     }
 
-    .top-right-buttons button {
-      background-color: #43a047;
-      color: white;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
+    #login-section {
+      max-width: 300px;
+      margin: 3rem auto;
       padding: 2rem;
+      background: white;
       border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    #login-section input, #login-section button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    #login-section button {
+      background: #0288d1;
+      color: white;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="left-section">
-      <div class="points">💎 Points : <span id="points">0</span></div>
-      <img src="/default-avatar.png" alt="Profil" class="profile-img" id="profile-btn">
+    <button id="profile-btn">
+      <img src="/default-avatar.png" id="avatar" />
+      <span id="points">0 pts</span>
+    </button>
+    <div class="top-buttons">
+      <button onclick="location.href='/shop.html'">🏪 Boutique</button>
+      <button onclick="alert('À venir')">🏆 Meilleurs joueurs</button>
     </div>
-    <h1>📸 Mon Hangar</h1>
   </header>
 
-  <div class="top-right-buttons">
-    <button onclick="window.location.href='shop.html'">🛍️ Boutique</button>
-    <button onclick="alert('Classement à venir')">🏆 Meilleurs joueurs</button>
+  <div id="profile-modal">
+    <p><strong>Crédits :</strong> <span id="credits">0</span></p>
+    <p><strong>Avions :</strong> <span id="planes-count">0</span></p>
+    <button onclick="logout()">Déconnexion</button>
   </div>
 
-  <main>
-    <div id="hangar">
-      <!-- Avions ajoutés s'afficheront ici -->
-    </div>
+  <main id="main-content" style="display: none;">
+    <h2>📸 Prends une photo d’un avion !</h2>
+    <input type="file" accept="image/*" capture="environment" id="photo-input">
   </main>
 
-  <div class="modal" id="profile-modal">
-    <h2>👤 Profil</h2>
-    <p>Email : <span id="user-email"></span></p>
-    <p>Nombre d'avions : <span id="plane-count"></span></p>
-    <button onclick="logout()">🚪 Déconnexion</button>
-  </div>
-  
-<input type="file" accept="image/*" capture="environment" id="photo-input" />
+  <section id="login-section">
+    <h2>Se connecter</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Mot de passe" required />
+    <button onclick="login()">Connexion</button>
+  </section>
 
-  <script type="module" src="/index.js"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient('https://ixntiwcgvljrjbjnfjti.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk');
+    let user;
+
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        user = session.user;
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        loadProfile();
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return alert(error.message);
+      await checkSession();
+    }
+
+    async function loadProfile() {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      document.getElementById('points').textContent = `${profile.points} pts`;
+      document.getElementById('credits').textContent = profile.credits;
+      document.getElementById('planes-count').textContent = profile.planes || 0;
+    }
+
+    document.getElementById('profile-btn').onclick = () => {
+      const modal = document.getElementById('profile-modal');
+      modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    };
+
+    window.logout = async () => {
+      await supabase.auth.signOut();
+      location.reload();
+    };
+
+    document.getElementById('photo-input').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file || !user) return;
+      const filename = `${Date.now()}.jpg`;
+      const { data, error } = await supabase.storage.from('photos').upload(`${user.id}/${filename}`, file);
+      if (error) return alert('Erreur envoi : ' + error.message);
+      const publicUrl = supabase.storage.from('photos').getPublicUrl(data.path).data.publicUrl;
+      await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
+      await supabase.rpc('increment_profile_points_credits', { uid: user.id });
+      alert('📸 Photo enregistrée !');
+      await loadProfile();
+    });
+
+    checkSession();
+  </script>
 </body>
 </html>
