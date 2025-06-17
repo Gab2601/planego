@@ -88,12 +88,19 @@
       margin: 0.5rem 0;
       border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 1rem;
     }
 
     #login-section button {
       background: #0288d1;
       color: white;
       font-weight: bold;
+      border: none;
+    }
+
+    #login-section button.signup-button {
+      background: #4caf50;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
@@ -121,13 +128,11 @@
   </main>
 
   <section id="login-section">
-  <h2>Se connecter</h2>
-  <input type="email" id="email" placeholder="Email" required />
-  <input type="password" id="password" placeholder="Mot de passe" required />
-  <button onclick="login()">Connexion</button>
-  <button onclick="signup()" style="margin-top: 0.5rem; background: #4caf50; color: white; font-weight: bold; border: none; border-radius: 8px; padding: 0.75rem;">S'inscrire</button>
-</section>
-
+    <h2>Se connecter</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Mot de passe" required />
+    <button onclick="login()">Connexion</button>
+    <button class="signup-button" onclick="signup()">S'inscrire</button>
   </section>
 
   <script type="module">
@@ -153,6 +158,28 @@
       if (error) return alert(error.message);
       await checkSession();
     }
+    window.login = login;
+
+    async function signup() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        return alert("Merci de remplir l'email et le mot de passe pour s'inscrire.");
+      }
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        return alert("Erreur inscription : " + error.message);
+      }
+
+      alert("Inscription réussie ! Un email de confirmation a été envoyé (si activé). Vous pouvez maintenant vous connecter.");
+
+      document.getElementById('email').value = '';
+      document.getElementById('password').value = '';
+    }
+    window.signup = signup;
 
     async function loadProfile() {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
@@ -188,3 +215,4 @@
   </script>
 </body>
 </html>
+
