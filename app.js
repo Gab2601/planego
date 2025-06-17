@@ -24,6 +24,26 @@ document.getElementById('btn-logout')?.addEventListener('click', async () => {
   await supabase.auth.signOut();
   location.href = 'login.html';
 });
+async function signup() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  if (!email || !password) {
+    return alert("Merci de remplir l'email et le mot de passe pour s'inscrire.");
+  }
+
+  const { data, error } = await supabase.auth.signUp({ email, password });
+
+  if (error) {
+    return alert("Erreur inscription : " + error.message);
+  }
+
+  alert("Inscription réussie ! Un email de confirmation a été envoyé (si activé). Vous pouvez maintenant vous connecter.");
+
+  document.getElementById('email').value = '';
+  document.getElementById('password').value = '';
+}
+
 
 async function loadProfile() {
   const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
