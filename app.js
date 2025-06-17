@@ -56,4 +56,17 @@ upload?.addEventListener('change', async e => {
   await supabase.from('users').update({ points: supabase.literal('points + 300'), credits: supabase.literal('credits + 2000') }).eq('id', user.id);
   await loadProfile();
   await loadHangar();
+
+  document.getElementById('photo-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const filename = `${Date.now()}.jpg`;
+  const { data, error } = await supabase.storage.from('photos').upload(`${user.id}/${filename}`, file);
+  if (error) return alert('Erreur envoi : ' + error.message);
+  const publicUrl = supabase.storage.from('photos').getPublicUrl(data.path).data.publicUrl;
+  await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
+  await supabase.rpc('increment_profile_points_credits', { uid: user.id });
+  alert('📸 Photo enregistrée !');
+});
+
 });
