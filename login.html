@@ -1,18 +1,28 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Connexion</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - Hangar Avions</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body { display:flex; justify-content:center; align-items:center; height:100vh;
+      background: linear-gradient(to bottom, #e3f2fd, #ffffff); margin:0; font-family:'Segoe UI'; }
+    form { background:white; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    form input, form button {
+      width:100%; padding:0.75rem; margin-top:1rem; border-radius:6px; border:1px solid #ccc;
+      font-size:1rem;
+    }
+    form button { background:#0288d1; color:white; border:none; font-weight:bold; cursor:pointer; }
+  </style>
 </head>
 <body>
-  <h1>Connexion</h1>
   <form id="login-form">
-    <input type="email" placeholder="Email" id="email" required />
-    <input type="password" placeholder="Mot de passe" id="password" required />
-    <button type="submit">Connexion</button>
+    <h2>🔑 Connexion</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Mot de passe" required>
+    <button type="submit">Se connecter</button>
   </form>
-  <script type="module" src="login.js"></script>
+  <script type="module" src="/login.js"></script>
 </body>
 </html>
