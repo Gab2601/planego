@@ -38,11 +38,12 @@ async function signup() {
     return alert("Erreur inscription : " + error.message);
   }
 
-  alert("Inscription réussie ! Un email de confirmation a été envoyé (si activé). Vous pouvez maintenant vous connecter.");
-
+  
   document.getElementById('email').value = '';
   document.getElementById('password').value = '';
 }
+
+window.signup = signup;  // expose la fonction globalement
 
 
 async function loadProfile() {
