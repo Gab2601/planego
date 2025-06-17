@@ -21,6 +21,7 @@
       background: #0288d1;
       color: white;
       padding: 1rem;
+      position: relative;
     }
 
     #profile-btn {
@@ -29,6 +30,7 @@
       cursor: pointer;
       display: flex;
       align-items: center;
+      position: relative;
     }
 
     #profile-btn img {
@@ -36,6 +38,7 @@
       width: 40px;
       height: 40px;
       margin-right: 0.5rem;
+      object-fit: cover;
     }
 
     #profile-modal {
@@ -47,6 +50,13 @@
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       display: none;
+      z-index: 100;
+      width: 200px;
+    }
+
+    #profile-modal input[type="file"] {
+      margin-top: 0.5rem;
+      width: 100%;
     }
 
     .top-buttons {
@@ -106,8 +116,8 @@
 </head>
 <body>
   <header>
-    <button id="profile-btn">
-      <img src="/default-avatar.png" id="avatar" />
+    <button id="profile-btn" aria-label="Afficher profil">
+      <img src="/default-avatar.png" id="avatar" alt="Avatar utilisateur" />
       <span id="points">0 pts</span>
     </button>
     <div class="top-buttons">
@@ -119,7 +129,13 @@
   <div id="profile-modal">
     <p><strong>Crédits :</strong> <span id="credits">0</span></p>
     <p><strong>Avions :</strong> <span id="planes-count">0</span></p>
-    <button onclick="logout()">Déconnexion</button>
+    <label for="avatar-upload" style="display:block; margin-top:10px; cursor:pointer; color:#0288d1; font-weight:bold;">
+      Changer la photo de profil
+    </label>
+    <input type="file" id="avatar-upload" accept="image/*" style="display:none;" />
+    <button onclick="logout()" style="margin-top:10px; background:#e53935; color:white; border:none; width:100%; padding:0.5rem; border-radius:8px; cursor:pointer;">
+      Déconnexion
+    </button>
   </div>
 
   <main id="main-content" style="display: none;">
@@ -131,8 +147,10 @@
     <h2>Se connecter</h2>
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Mot de passe" required />
-   <button id="login-btn">Connexion</button>
-<button id="signup-btn" class="signup-button">S'inscrire</button>
+    <button id="login-btn">Connexion</button>
+    <button id="signup-btn" class="signup-button">S'inscrire</button>
+  </section>
+
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -145,7 +163,7 @@
         user = session.user;
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
-        loadProfile();
+        await loadProfile();
       }
     }
 
@@ -156,7 +174,6 @@
       if (error) return alert(error.message);
       await checkSession();
     }
-    window.login = login;
 
     async function signup() {
       const email = document.getElementById('email').value;
@@ -172,29 +189,68 @@
         return alert("Erreur inscription : " + error.message);
       }
 
-      alert("Inscription réussie ! Un email de confirmation a été envoyé (si activé). Vous pouvez maintenant vous connecter.");
 
       document.getElementById('email').value = '';
       document.getElementById('password').value = '';
     }
-    window.signup = signup;
 
     async function loadProfile() {
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (error) {
+        console.error("Erreur chargement profil:", error);
+        return;
+      }
       document.getElementById('points').textContent = `${profile.points} pts`;
       document.getElementById('credits').textContent = profile.credits;
       document.getElementById('planes-count').textContent = profile.planes || 0;
+
+      // Met à jour l'avatar s'il y en a un dans le profil (assumons qu'il y a un champ avatar_url)
+      if (profile.avatar_url) {
+        const url = supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl;
+        document.getElementById('avatar').src = url;
+      } else {
+        document.getElementById('avatar').src = '/default-avatar.png';
+      }
     }
 
-    document.getElementById('profile-btn').onclick = () => {
+    document.getElementById('profile-btn').addEventListener('click', () => {
       const modal = document.getElementById('profile-modal');
       modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-    };
+    });
 
-    window.logout = async () => {
+    async function logout() {
       await supabase.auth.signOut();
       location.reload();
-    };
+    }
+
+    document.getElementById('avatar-upload').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !user) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload avatar dans un bucket 'avatars'
+      const { data, error } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+      if (error) {
+        alert("Erreur upload avatar : " + error.message);
+        return;
+      }
+
+      // Met à jour la colonne avatar_url dans la table profiles
+      const { error: updateError } = await supabase.from('profiles').update({ avatar_url: filePath }).eq('id', user.id);
+      if (updateError) {
+        alert("Erreur mise à jour profil : " + updateError.message);
+        return;
+      }
+
+      // Met à jour l'avatar affiché
+      const publicUrl = supabase.storage.from('avatars').getPublicUrl(filePath).data.publicUrl;
+      document.getElementById('avatar').src = publicUrl;
+
+      alert("Photo de profil mise à jour !");
+    });
 
     document.getElementById('photo-input').addEventListener('change', async e => {
       const file = e.target.files[0];
@@ -209,8 +265,11 @@
       await loadProfile();
     });
 
+    document.getElementById('login-btn').addEventListener('click', login);
+    document.getElementById('signup-btn').addEventListener('click', signup);
+    window.logout = logout;
+
     checkSession();
   </script>
 </body>
 </html>
-
