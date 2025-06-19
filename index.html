@@ -117,147 +117,160 @@
   </section>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://ixntiwcgvljrjbjnfjti.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
-    );
+  const supabase = createClient(
+    'https://ixntiwcgvljrjbjnfjti.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+  );
 
-    let user = null;
+  let user = null;
 
-    const avatar = document.getElementById('avatar');
-    const profileModal = document.getElementById('profile-modal');
-    const shopItemsContainer = document.getElementById('shop-items');
+  const avatar = document.getElementById('avatar');
+  const profileModal = document.getElementById('profile-modal');
+  const shopItemsContainer = document.getElementById('shop-items');
+  const hangarContainer = document.getElementById('hangar-list');
 
-    avatar.addEventListener('click', () => {
-      profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
-    });
+  avatar.addEventListener('click', () => {
+    profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
+  });
 
-    async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        user = session.user;
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('logout-btn').style.display = 'inline-block';
-        showSection('photo');
-        await loadProfile();
-        await loadShop();
-        await loadHangar();
-      }
-    }
-
-    async function loadProfile() {
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (!profile) return;
-      document.getElementById('credits').textContent = profile.credits || 0;
-      document.getElementById('profile-points').textContent = profile.points || 0;
-      document.getElementById('profile-email').textContent = profile.email;
-      document.getElementById('points').textContent = (profile.points || 0) + " pts";
-      avatar.src = profile.avatar_url || 'default-avatar.png';
-    }
-
-    async function loadShop() {
-      const { data, error } = await supabase.from('shop_items').select('*');
-      if (error) return console.error("Erreur chargement boutique:", error);
-
-      shopItemsContainer.innerHTML = "";
-      data.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'shop-item';
-        div.innerHTML = `
-          <h3>${item.name}</h3>
-          <img src="${item.image_url}" alt="${item.name}" />
-          <p>Prix : ${item.price} crédits</p>
-          <button onclick="buyItem('${item.name}', ${item.price})">Acheter</button>
-        `;
-        shopItemsContainer.appendChild(div);
-      });
-    }
-
-    window.buyItem = async function(name, price) {
-      if (!user) return alert("Connectez-vous d'abord");
-      const { data: profile } = await supabase.from('profiles').select('credits, planes').eq('id', user.id).single();
-      if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
-      await supabase.from('profiles').update({
-        credits: profile.credits - price,
-        planes: (profile.planes || 0) + 1
-      }).eq('id', user.id);
-      await supabase.from('hangar').insert({ user_id: user.id, plane: name });
-      alert(`✅ Vous avez acheté ${name} !`);
+  async function checkSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      user = session.user;
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('logout-btn').style.display = 'inline-block';
+      showSection('photo');
       await loadProfile();
-    };
-
-    async function loadHangar() {
-      const { data } = await supabase.from('photos').select('url').eq('user_id', user.id);
-      const container = document.getElementById('hangar-list');
-      container.innerHTML = "";
-      data.forEach(photo => {
-        const img = document.createElement('img');
-        img.src = photo.url;
-        img.className = 'photo-thumb';
-        container.appendChild(img);
-      });
-    }
-
-    document.getElementById('photo-input').addEventListener('change', async e => {
-      const file = e.target.files[0];
-      if (!file || !user) return alert("Fichier invalide ou non connecté");
-
-      const filename = `${user.id}/${Date.now()}-${file.name}`;
-      const { error: uploadError } = await supabase.storage.from('photos').upload(filename, file);
-      if (uploadError) return alert("Erreur d'envoi");
-
-      const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
-      await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
-
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      await supabase.from('profiles').update({
-        credits: (profile.credits || 0) + 1500,
-        points: (profile.points || 0) + 200
-      }).eq('id', user.id);
-
-      alert("📸 Photo enregistrée !");
-      await loadProfile();
+      await loadShop();
       await loadHangar();
+    }
+  }
+
+  async function loadProfile() {
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (!profile) return;
+    document.getElementById('credits').textContent = profile.credits || 0;
+    document.getElementById('profile-points').textContent = profile.points || 0;
+    document.getElementById('profile-email').textContent = profile.email;
+    document.getElementById('points').textContent = (profile.points || 0) + " pts";
+    avatar.src = profile.avatar_url || 'default-avatar.png';
+  }
+
+  async function loadShop() {
+    const { data, error } = await supabase.from('shop_items').select('*');
+    if (error) return console.error("Erreur boutique:", error);
+
+    shopItemsContainer.innerHTML = "";
+    data.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      div.innerHTML = `
+        <h3>${item.name}</h3>
+        <img src="${item.image_url}" alt="${item.name}" />
+        <p>Prix : ${item.price} crédits</p>
+        <button onclick="buyItem('${item.name}', ${item.price}, '${item.image_url}')">Acheter</button>
+      `;
+      shopItemsContainer.appendChild(div);
     });
+  }
 
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return alert(error.message);
-      await checkSession();
+  window.buyItem = async function(name, price, image_url) {
+    if (!user) return alert("Connectez-vous d'abord");
+    const { data: profile } = await supabase.from('profiles').select('credits, planes, points').eq('id', user.id).single();
+    if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
+    
+    await supabase.from('profiles').update({
+      credits: profile.credits - price,
+      points: (profile.points || 0) + 100,
+      planes: (profile.planes || 0) + 1
+    }).eq('id', user.id);
+
+    await supabase.from('hangar').insert({ user_id: user.id, plane: name, image_url });
+
+    alert(`✅ Vous avez acheté ${name} !`);
+    await loadProfile();
+    await loadHangar();
+  };
+
+  async function loadHangar() {
+    const { data, error } = await supabase.from('hangar').select('*').eq('user_id', user.id);
+    if (error) return console.error("Erreur hangar:", error);
+
+    hangarContainer.innerHTML = "";
+    if (!data.length) {
+      hangarContainer.innerHTML = "<p>Pas encore d’avions achetés.</p>";
+      return;
+    }
+
+    data.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      div.innerHTML = `
+        <h3>${item.plane}</h3>
+        <img src="${item.image_url}" alt="${item.plane}" />
+      `;
+      hangarContainer.appendChild(div);
     });
+  }
 
-    document.getElementById('signup-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) return alert(error.message);
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        email: data.user.email,
-        credits: 0,
-        points: 0,
-        planes: 0,
-        avatar_url: 'default-avatar.png'
-      });
-      await checkSession();
+  document.getElementById('photo-input').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file || !user) return alert("Fichier invalide ou non connecté");
+
+    const filename = `${user.id}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from('photos').upload(filename, file);
+    if (uploadError) return alert("Erreur d'envoi");
+
+    const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
+    await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
+
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    await supabase.from('profiles').update({
+      credits: (profile.credits || 0) + 1500,
+      points: (profile.points || 0) + 200
+    }).eq('id', user.id);
+
+    alert("📸 Photo enregistrée !");
+    await loadProfile();
+  });
+
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return alert(error.message);
+    await checkSession();
+  });
+
+  document.getElementById('signup-btn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return alert(error.message);
+    await supabase.from('profiles').insert({
+      id: data.user.id,
+      email: data.user.email,
+      credits: 0,
+      points: 0,
+      planes: 0,
+      avatar_url: 'default-avatar.png'
     });
+    await checkSession();
+  });
 
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await supabase.auth.signOut();
-      location.reload();
-    });
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  });
 
-    window.showSection = function(id) {
-      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-      document.getElementById(id).style.display = 'block';
-      profileModal.style.display = 'none';
-    };
+  window.showSection = function(id) {
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    profileModal.style.display = 'none';
+  };
 
-    window.onload = checkSession;
-  </script>
-</body>
-</html>
+  window.onload = checkSession;
+</script>
+
