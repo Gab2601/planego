@@ -4,273 +4,214 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hangar Avion</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0288d1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: auto;
-      padding: 1em;
-      background-color: #e3f2fd;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1em;
-    }
-    nav button, #logout-btn {
-      background-color: #0288d1;
-      color: white;
-      border: none;
-      padding: 0.5em 1em;
-      margin-right: 0.5em;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .section {
-      display: none;
-      background: white;
-      padding: 1em;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-top: 1em;
-    }
-    #profile-modal {
-      position: fixed;
-      top: 60px;
-      right: 10px;
-      background: white;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 100;
-      display: none;
-    }
-    #avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      object-fit: cover;
-    }
-    .photo-thumb {
-      width: 100%;
-      max-width: 300px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-    .shop-item {
-      margin-bottom: 20px;
-    }
-    .shop-item img {
-      width: 100%;
-      max-width: 250px;
-      border-radius: 8px;
-    }
+    body { font-family: Arial; max-width: 700px; margin: auto; padding: 1em; background: #e3f2fd; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1em; }
+    nav button, #logout-btn { background: #0288d1; color: white; border: none; padding: 0.5em 1em; margin-right: 0.5em; border-radius:4px; cursor: pointer; }
+    .section { display: none; background: white; padding:1em; border-radius:8px; margin-top:1em; }
+    #profile-modal { position:fixed; top:60px; right:10px; background:white; padding:15px; border:1px solid #ccc; border-radius:8px; display:none; z-index:100; }
+    img.avatar, .photo-thumb, .shop-item img, .hangar-item img { border-radius:8px; }
+    img.avatar { width:40px; height:40px; object-fit:cover; cursor:pointer; }
+    .photo-thumb, .shop-item img, .hangar-item img { max-width:150px; display:block; margin-bottom:5px; }
+    table { width:100%; border-collapse: collapse; margin-top:10px; }
+    table th, table td { border:1px solid #ccc; padding: 8px; text-align:center; }
   </style>
 </head>
 <body>
 
-  <header>
-    <div>
-      <img src="default-avatar.png" id="avatar" alt="Avatar" />
-      <span id="points">0 pts</span>
-    </div>
-    <nav>
-      <button onclick="showSection('photo')">📸 Photo</button>
-      <button onclick="showSection('shop')">🏪 Boutique</button>
-      <button onclick="showSection('hangar')">🛩️ Hangar</button>
-    </nav>
-    <button id="logout-btn" style="display:none;">Déconnexion</button>
-  </header>
+<header>
+  <div><img src="default-avatar.png" id="avatar" class="avatar" alt="Avatar"/><span id="points-header">0 pts</span></div>
+  <nav>
+    <button onclick="showSection('photo')">📸 Photo</button>
+    <button onclick="showSection('shop')">🏪 Boutique</button>
+    <button onclick="showSection('hangar')">🛩️ Hangar</button>
+  </nav>
+  <button id="logout-btn" style="display:none;">Déconnexion</button>
+</header>
 
-  <div id="profile-modal">
-    <p><strong>Email :</strong> <span id="profile-email"></span></p>
-    <p><strong>Crédits :</strong> <span id="credits">0</span></p>
-    <p><strong>Points :</strong> <span id="profile-points">0</span></p>
-  </div>
+<div id="profile-modal">
+  <p><strong>Email : </strong><span id="profile-email"></span></p>
+  <p><strong>Crédits : </strong><span id="profile-credits">0</span></p>
+  <p><strong>Points : </strong><span id="profile-points">0</span></p>
+</div>
 
-  <section id="login-section" class="section" style="display:block;">
-    <h2>Connexion / Inscription</h2>
-    <input type="email" id="email" placeholder="Email" /><br><br>
-    <input type="password" id="password" placeholder="Mot de passe" /><br><br>
-    <button id="login-btn">Connexion</button>
-    <button id="signup-btn">Créer un compte</button>
-  </section>
+<section id="login-section" class="section" style="display:block;">
+  <h2>Connexion / Inscription</h2>
+  <input type="email" id="email" placeholder="Email" /><br><br>
+  <input type="password" id="password" placeholder="Mot de passe" /><br><br>
+  <button id="login-btn">Connexion</button>
+  <button id="signup-btn">Créer un compte</button>
+</section>
 
-  <section id="photo" class="section">
-    <h2>📸 Prends une photo d’un avion !</h2>
-    <input type="file" accept="image/*" capture="environment" id="photo-input" />
-  </section>
+<section id="photo" class="section">
+  <h2>📸 Prends une photo d’un avion !</h2>
+  <input type="file" accept="image/*" capture="environment" id="photo-input" />
+</section>
 
-  <section id="shop" class="section">
-    <h2>🏪 Boutique</h2>
-    <div id="shop-items"></div>
-  </section>
+<section id="shop" class="section">
+  <h2>🏪 Boutique</h2>
+  <div id="shop-items"></div>
+</section>
 
-  <section id="hangar" class="section">
-    <h2>🛩️ Ton Hangar</h2>
-    <div id="hangar-list"></div>
-  </section>
+<section id="hangar" class="section">
+  <h2>🛩️ Ton Hangar</h2>
+  <table id="hangar-table">
+    <thead><tr><th>Avion</th><th>Image</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
 
-  <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  const supabase = createClient(
-    'https://ixntiwcgvljrjbjnfjti.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
-  );
+const supabase = createClient(
+  'https://ixntiwcgvljrjbjnfjti.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
+);
 
-  let user = null;
+let user = null;
 
-  const avatar = document.getElementById('avatar');
-  const profileModal = document.getElementById('profile-modal');
-  const shopItemsContainer = document.getElementById('shop-items');
-  const hangarContainer = document.getElementById('hangar-list');
+const avatarImg = document.getElementById('avatar');
+const profileModal = document.getElementById('profile-modal');
+const logoutBtn = document.getElementById('logout-btn');
+const pointsHeader = document.getElementById('points-header');
 
-  avatar.addEventListener('click', () => {
-    profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
+// Toggle profil modal
+avatarImg.addEventListener('click', () => {
+  profileModal.style.display = profileModal.style.display === 'none' ? 'block' : 'none';
+});
+
+// Show/hide sections
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  profileModal.style.display = 'none';
+}
+
+// Session check
+async function checkSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    user = session.user;
+    document.getElementById('login-section').style.display = 'none';
+    logoutBtn.style.display = 'inline-block';
+    showSection('photo');
+    await loadProfile();
+    await loadShop();
+    await loadHangar();
+  }
+}
+
+// Load profile
+async function loadProfile() {
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (!profile) return;
+  document.getElementById('profile-email').textContent = profile.email;
+  document.getElementById('profile-credits').textContent = profile.credits;
+  document.getElementById('profile-points').textContent = profile.points;
+  pointsHeader.textContent = profile.points + ' pts';
+  avatarImg.src = profile.avatar_url || 'default-avatar.png';
+}
+
+// Load shop
+async function loadShop() {
+  const { data: items, error } = await supabase.from('shop_items').select('*');
+  if (error) return console.error(error);
+  const container = document.getElementById('shop-items');
+  container.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    div.innerHTML = `
+      <h3>${item.name}</h3>
+      <img src="${item.image_url}" alt="${item.name}" />
+      <p>Prix : ${item.price} crédits</p>
+      <button onclick="buyItem('${item.name}',${item.price},'${item.image_url}')">Acheter</button>
+    `;
+    container.appendChild(div);
   });
+}
 
-  async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      user = session.user;
-      document.getElementById('login-section').style.display = 'none';
-      document.getElementById('logout-btn').style.display = 'inline-block';
-      showSection('photo');
-      await loadProfile();
-      await loadShop();
-      await loadHangar();
-    }
-  }
-
-  async function loadProfile() {
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (!profile) return;
-    document.getElementById('credits').textContent = profile.credits || 0;
-    document.getElementById('profile-points').textContent = profile.points || 0;
-    document.getElementById('profile-email').textContent = profile.email;
-    document.getElementById('points').textContent = (profile.points || 0) + " pts";
-    avatar.src = profile.avatar_url || 'default-avatar.png';
-  }
-
-  async function loadShop() {
-    const { data, error } = await supabase.from('shop_items').select('*');
-    if (error) return console.error("Erreur boutique:", error);
-
-    shopItemsContainer.innerHTML = "";
-    data.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'shop-item';
-      div.innerHTML = `
-        <h3>${item.name}</h3>
-        <img src="${item.image_url}" alt="${item.name}" />
-        <p>Prix : ${item.price} crédits</p>
-        <button onclick="buyItem('${item.name}', ${item.price}, '${item.image_url}')">Acheter</button>
-      `;
-      shopItemsContainer.appendChild(div);
-    });
-  }
-
-  window.buyItem = async function(name, price) {
+// Purchase handler
+window.buyItem = async function(name,price,imgUrl) {
   if (!user) return alert("Connectez-vous d'abord");
-
-  // Récupère le profil
-  const { data: profile } = await supabase.from('profiles').select('credits, planes').eq('id', user.id).single();
-  if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
-
-  // Récupère les infos du produit dans la boutique pour récupérer l'image
-  const { data: items } = await supabase.from('shop_items').select('image_url').eq('name', name);
-  const image_url = items?.[0]?.image_url || '';
-
-  // Mets à jour les crédits et compte d'avions
+  const { data: p } = await supabase.from('profiles').select('credits,planes').eq('id',user.id).single();
+  if (p.credits < price) return alert("❌ Crédits insuffisants !");
   await supabase.from('profiles').update({
-    credits: profile.credits - price,
-    planes: (profile.planes || 0) + 1
+    credits: p.credits - price, planes: p.planes+1
   }).eq('id', user.id);
-
-  // Ajoute l'avion dans le hangar avec l'image
-  await supabase.from('hangar').insert({
-    user_id: user.id,
-    plane: name,
-    image_url: image_url
-  });
-
-  alert(`✅ Vous avez acheté ${name} !`);
-
+  await supabase.from('hangar').insert({ user_id: user.id, plane: name, image_url: imgUrl });
+  alert("✅ Vous avez acheté " + name);
   await loadProfile();
   await loadHangar();
 };
 
-
- #hangar-list img {
-  transition: transform 0.2s;
+// Load hangar (table of purchased and taken photos)
+async function loadHangar() {
+  const { data: bought } = await supabase.from('hangar').select('plane,image_url').eq('user_id', user.id);
+  const { data: photos } = await supabase.from('photos').select('url').eq('user_id',user.id);
+  const tbody = document.querySelector('#hangar-table tbody');
+  tbody.innerHTML = '';
+  bought.forEach(b => {
+    const row = tbody.insertRow();
+    row.insertCell().textContent = b.plane;
+    const imgC = row.insertCell(); imgC.innerHTML = `<img src="${b.image_url}" class="hangar-item" />`;
+  });
+  photos.forEach(ph => {
+    const row = tbody.insertRow();
+    row.insertCell().textContent = 'Photo';
+    const imgC = row.insertCell(); imgC.innerHTML = `<img src="${ph.url}" class="hangar-item" />`;
+  });
 }
-#hangar-list img:hover {
-  transform: scale(1.05);
-}
 
+// Photo upload
+document.getElementById('photo-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file || !user) return alert("Fichier invalide ou non connecté");
+  const fn = `${user.id}/${Date.now()}-${file.name}`;
+  const { error: upE } = await supabase.storage.from('photos').upload(fn, file);
+  if (upE) return alert("Erreur upload : " + upE.message);
+  const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(fn);
+  await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
+  const { data: pr } = await supabase.from('profiles').select('credits,points').eq('id',user.id).single();
+  await supabase.from('profiles').update({
+    credits: pr.credits + 1500, points: pr.points + 200
+  }).eq('id', user.id);
+  alert("📸 Photo enregistrée !");
+  await loadProfile();
+  await loadHangar();
+});
 
-  document.getElementById('photo-input').addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file || !user) return alert("Fichier invalide ou non connecté");
+// Auth handlers
+document.getElementById('login-btn').onclick = async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) return alert(error.message);
+  await checkSession();
+};
 
-    const filename = `${user.id}/${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage.from('photos').upload(filename, file);
-    if (uploadError) return alert("Erreur d'envoi");
-
-    const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
-    await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
-
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    await supabase.from('profiles').update({
-      credits: (profile.credits || 0) + 1500,
-      points: (profile.points || 0) + 200
-    }).eq('id', user.id);
-
-    alert("📸 Photo enregistrée !");
-    await loadProfile();
+document.getElementById('signup-btn').onclick = async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) return alert(error.message);
+  await supabase.from('profiles').insert({
+    id: data.user.id, email: data.user.email,
+    credits: 0, points: 0, planes: 0,
+    avatar_url: 'default-avatar.png'
   });
+  await checkSession();
+};
 
-  document.getElementById('login-btn').addEventListener('click', async () => {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return alert(error.message);
-    await checkSession();
-  });
+logoutBtn.onclick = async () => {
+  await supabase.auth.signOut();
+  location.reload();
+};
 
-  document.getElementById('signup-btn').addEventListener('click', async () => {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return alert(error.message);
-    await supabase.from('profiles').insert({
-      id: data.user.id,
-      email: data.user.email,
-      credits: 0,
-      points: 0,
-      planes: 0,
-      avatar_url: 'default-avatar.png'
-    });
-    await checkSession();
-  });
+// App start
+checkSession();
 
-  document.getElementById('logout-btn').addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    location.reload();
-  });
-
-  window.showSection = function(id) {
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    profileModal.style.display = 'none';
-  };
-
-  window.onload = checkSession;
 </script>
-
+</body>
+</html>
