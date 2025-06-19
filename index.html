@@ -3,14 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>planego</title>
+  <title>Hangar Avion</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0288d1" />
-  <!-- Obligatoire pour iOS (mode standalone) -->
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Hangar Avion" />
-<link rel="apple-touch-icon" href="/icon-192.png" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -54,10 +49,6 @@
       z-index: 100;
       display: none;
     }
-    .btn {
-      padding: 0.5em 1em;
-      cursor: pointer;
-    }
     #avatar {
       width: 40px;
       height: 40px;
@@ -65,42 +56,49 @@
       cursor: pointer;
       object-fit: cover;
     }
-    ul { list-style: none; padding: 0; }
-    li { margin-bottom: 0.5em; }
     .photo-thumb {
       width: 100%;
       max-width: 300px;
       border-radius: 8px;
       margin-bottom: 10px;
     }
+    .shop-item {
+      margin-bottom: 20px;
+    }
+    .shop-item img {
+      width: 100%;
+      max-width: 250px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
+
   <header>
     <div>
       <img src="default-avatar.png" id="avatar" alt="Avatar" />
       <span id="points">0 pts</span>
     </div>
     <nav>
-      <button class="btn" onclick="showSection('photo')">📸 Photo</button>
-      <button class="btn" onclick="showSection('shop')">🏪 Boutique</button>
-      <button class="btn" onclick="showSection('hangar')">🛩️ Hangar</button>
+      <button onclick="showSection('photo')">📸 Photo</button>
+      <button onclick="showSection('shop')">🏪 Boutique</button>
+      <button onclick="showSection('hangar')">🛩️ Hangar</button>
     </nav>
-    <button id="logout-btn" class="btn" style="display:none;">Déconnexion</button>
+    <button id="logout-btn" style="display:none;">Déconnexion</button>
   </header>
 
-  <div id="profile-modal" style="display:none;">
+  <div id="profile-modal">
     <p><strong>Email :</strong> <span id="profile-email"></span></p>
-    <p><strong>Crédits :</strong> <span id="credits"></span></p>
-    <p><strong>Points :</strong> <span id="points-modal"></span></p>
+    <p><strong>Crédits :</strong> <span id="credits">0</span></p>
+    <p><strong>Points :</strong> <span id="profile-points">0</span></p>
   </div>
 
   <section id="login-section" class="section" style="display:block;">
     <h2>Connexion / Inscription</h2>
     <input type="email" id="email" placeholder="Email" /><br><br>
     <input type="password" id="password" placeholder="Mot de passe" /><br><br>
-    <button class="btn" id="login-btn">Connexion</button>
-    <button class="btn" id="signup-btn">Créer un compte</button>
+    <button id="login-btn">Connexion</button>
+    <button id="signup-btn">Créer un compte</button>
   </section>
 
   <section id="photo" class="section">
@@ -114,288 +112,152 @@
   </section>
 
   <section id="hangar" class="section">
-    <h2>🛩️ Ton Hangar (Photos)</h2>
+    <h2>🛩️ Ton Hangar</h2>
     <div id="hangar-list"></div>
   </section>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabaseUrl = 'https://ixntiwcgvljrjbjnfjti.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(
+      'https://ixntiwcgvljrjbjnfjti.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
+    );
 
     let user = null;
 
-    const loginSection = document.getElementById('login-section');
-    const photoSection = document.getElementById('photo');
-    const shopSection = document.getElementById('shop');
-    const hangarSection = document.getElementById('hangar');
-    const avatarImg = document.getElementById('avatar');
-    const pointsSpan = document.getElementById('points');
-    const creditsSpan = document.getElementById('credits');
-    const pointsModalSpan = document.getElementById('points-modal');
-    const profileEmailSpan = document.getElementById('profile-email');
+    const avatar = document.getElementById('avatar');
     const profileModal = document.getElementById('profile-modal');
-    const photoInput = document.getElementById('photo-input');
     const shopItemsContainer = document.getElementById('shop-items');
-    const hangarList = document.getElementById('hangar-list');
-    const logoutBtn = document.getElementById('logout-btn');
 
-    const shopItems = [
-      { name: "F22", price: 3000 },
-      { name: "A400M", price: 2000 },
-      { name: "A380", price: 1500 }
-    ];
-
-    function showSection(id) {
-      [loginSection, photoSection, shopSection, hangarSection].forEach(sec => {
-        sec.style.display = (sec.id === id) ? 'block' : 'none';
-      });
-      profileModal.style.display = 'none';
-    }
-
-    async function login() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      if (!email || !password) return alert("Email et mot de passe requis");
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return alert(error.message);
-      await checkSession();
-    }
-
-    async function signup() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      if (!email || !password) return alert("Email et mot de passe requis");
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) return alert(error.message);
-
-      // Crée profil initialisé
-      await supabase.from('profiles').insert([{
-        id: data.user.id,
-        email: data.user.email,
-        credits: 5000,
-        points: 0,
-        planes: 0,
-        avatar_url: '/default-avatar.png'
-      }]);
-      await checkSession();
-    }
+    avatar.addEventListener('click', () => {
+      profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
+    });
 
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         user = session.user;
-        loginSection.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'inline-block';
         showSection('photo');
         await loadProfile();
-        loadShop();
-        loadHangar();
-      } else {
-        user = null;
-        loginSection.style.display = 'block';
-        logoutBtn.style.display = 'none';
-        showSection('login-section');
+        await loadShop();
+        await loadHangar();
       }
-    }
-
-    async function logout() {
-      await supabase.auth.signOut();
-      location.reload();
     }
 
     async function loadProfile() {
-      if (!user) return;
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (error) return console.error("Erreur chargement profil:", error);
-      if (!profile) {
-        console.warn("Profil non trouvé pour cet utilisateur");
-        return;
-      }
-
-      creditsSpan.textContent = profile.credits || 0;
-      pointsModalSpan.textContent = profile.points || 0;
-      pointsSpan.textContent = (profile.points || 0) + " pts";
-      profileEmailSpan.textContent = profile.email || user.email || "";
-      avatarImg.src = profile.avatar_url || '/default-avatar.png';
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (!profile) return;
+      document.getElementById('credits').textContent = profile.credits || 0;
+      document.getElementById('profile-points').textContent = profile.points || 0;
+      document.getElementById('profile-email').textContent = profile.email;
+      document.getElementById('points').textContent = (profile.points || 0) + " pts";
+      avatar.src = profile.avatar_url || 'default-avatar.png';
     }
 
-    async function loadHangar() {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('photos')
-        .select('url')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (error) return console.error("Erreur chargement hangar:", error);
+    async function loadShop() {
+      const { data, error } = await supabase.from('shop_items').select('*');
+      if (error) return console.error("Erreur chargement boutique:", error);
 
-      hangarList.innerHTML = '';
-      if (!data.length) {
-        hangarList.textContent = "Aucune photo pour le moment.";
-        return;
-      }
+      shopItemsContainer.innerHTML = "";
+      data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'shop-item';
+        div.innerHTML = `
+          <h3>${item.name}</h3>
+          <img src="${item.image_url}" alt="${item.name}" />
+          <p>Prix : ${item.price} crédits</p>
+          <button onclick="buyItem('${item.name}', ${item.price})">Acheter</button>
+        `;
+        shopItemsContainer.appendChild(div);
+      });
+    }
+
+    window.buyItem = async function(name, price) {
+      if (!user) return alert("Connectez-vous d'abord");
+      const { data: profile } = await supabase.from('profiles').select('credits, planes').eq('id', user.id).single();
+      if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
+      await supabase.from('profiles').update({
+        credits: profile.credits - price,
+        planes: (profile.planes || 0) + 1
+      }).eq('id', user.id);
+      await supabase.from('hangar').insert({ user_id: user.id, plane: name });
+      alert(`✅ Vous avez acheté ${name} !`);
+      await loadProfile();
+    };
+
+    async function loadHangar() {
+      const { data } = await supabase.from('photos').select('url').eq('user_id', user.id);
+      const container = document.getElementById('hangar-list');
+      container.innerHTML = "";
       data.forEach(photo => {
         const img = document.createElement('img');
         img.src = photo.url;
         img.className = 'photo-thumb';
-        hangarList.appendChild(img);
+        container.appendChild(img);
       });
     }
 
-    async function loadShop() {
-  shopItemsContainer.innerHTML = "";
+    document.getElementById('photo-input').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file || !user) return alert("Fichier invalide ou non connecté");
 
-  const { data: items, error } = await supabase
-    .from('shop-items')
-    .select('*');
+      const filename = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from('photos').upload(filename, file);
+      if (uploadError) return alert("Erreur d'envoi");
 
-  if (error) {
-    console.error("Erreur chargement boutique :", error);
-    return;
-  }
+      const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
+      await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
 
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.innerHTML = `
-      <h3>${item.name}</h3>
-      <img src="${item.image_url}" alt="${item.name}" style="max-width:100%; border-radius:8px; margin-bottom:10px;">
-      <p>Prix : ${item.price} crédits</p>
-      <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}">Acheter</button>
-    `;
-    shopItemsContainer.appendChild(div);
-  });
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      await supabase.from('profiles').update({
+        credits: (profile.credits || 0) + 1500,
+        points: (profile.points || 0) + 200
+      }).eq('id', user.id);
 
-  // Ajoute les listeners achat
-  document.querySelectorAll('.buy-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      await buyItem(btn.dataset.name, parseInt(btn.dataset.price));
-    });
-  });
-}
-async function buyItem(name, price) {
-  if (!user) return alert("Connectez-vous d'abord");
-
-  // Récupère le profil de l'utilisateur
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('credits, planes')
-    .eq('id', user.id)
-    .single();
-
-  if (error || !profile) {
-    console.error("Erreur chargement profil pour achat:", error);
-    return alert("Impossible de vérifier vos crédits");
-  }
-
-  if (profile.credits < price) {
-    return alert("❌ Crédits insuffisants !");
-  }
-
-  // Met à jour les crédits et ajoute un avion
-  const { error: updateError } = await supabase.from('profiles').update({
-    credits: profile.credits - price,
-    planes: (profile.planes || 0) + 1
-  }).eq('id', user.id);
-
-  if (updateError) {
-    console.error("Erreur mise à jour profil après achat:", updateError);
-    return alert("Erreur lors de l'achat");
-  }
-
-  // Ajoute dans le hangar
-  await supabase.from('hangar').insert({ user_id: user.id, plane: name });
-
-  alert(`✅ Vous avez acheté ${name} !`);
-  await loadProfile();
-}
-
-
-
-      if (!user) return alert("Veuillez vous connecter.");
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const filePath = `photos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('photos')
-        .upload(filePath, file);
-
-      if (uploadError) return alert("Erreur upload: " + uploadError.message);
-
-      const { data: { publicUrl }, error: urlError } = supabase.storage
-        .from('photos')
-        .getPublicUrl(filePath);
-
-      if (urlError) return alert("Erreur récupération URL: " + urlError.message);
-
-      // Enregistre URL dans la table photos
-      const { error: insertError } = await supabase.from('photos').insert([{
-        url: publicUrl,
-        user_id: user.id
-      }]);
-
-      if (insertError) return alert("Erreur sauvegarde photo: " + insertError.message);
-
-      // Ajoute des points au profil
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileError || !profile) return alert("Erreur profil");
-
-      const newPoints = (profile.points || 0) + 300;
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ points: newPoints })
-        .eq('id', user.id);
-
-      if (updateError) return alert("Erreur mise à jour points: " + updateError.message);
-
-      alert("Photo ajoutée ! +300points");
+      alert("📸 Photo enregistrée !");
       await loadProfile();
       await loadHangar();
-    }
+    });
 
-    window.showSection = showSection;
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return alert(error.message);
+      await checkSession();
+    });
 
-    window.onload = async () => {
-      // Vérifie session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        user = session.user;
-        await checkSession();
-      } else {
-        showSection('login-section');
-      }
-
-      // Listeners boutons
-      document.getElementById('login-btn').addEventListener('click', login);
-      document.getElementById('signup-btn').addEventListener('click', signup);
-      logoutBtn.addEventListener('click', logout);
-
-      // Listener avatar toggle profile modal
-      avatarImg.addEventListener('click', () => {
-        profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
+    document.getElementById('signup-btn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) return alert(error.message);
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        email: data.user.email,
+        credits: 0,
+        points: 0,
+        planes: 0,
+        avatar_url: 'default-avatar.png'
       });
+      await checkSession();
+    });
 
-      // Listener photo input
-      photoInput.addEventListener('change', async (e) => {
-        if (e.target.files.length > 0) {
-          await uploadPhoto(e.target.files[0]);
-          e.target.value = ""; // reset input
-        }
-      });
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      location.reload();
+    });
+
+    window.showSection = function(id) {
+      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      profileModal.style.display = 'none';
     };
+
+    window.onload = checkSession;
   </script>
 </body>
 </html>
