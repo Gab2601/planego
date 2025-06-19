@@ -84,12 +84,11 @@
     <button id="logout-btn" class="btn" style="display:none;">Déconnexion</button>
   </header>
 
-  <div id="profile-modal">
-    <p><strong>Crédits gagnés :</strong> <span id="credits">0</span></p>
-    <p><strong>Points gagnés :</strong> <span id="points-gained">0</span></p>
-    <p><strong>Avions achetés :</strong> <span id="planes-count">0</span></p>
-    <input type="file" id="avatar-upload" accept="image/*" />
-  </div>
+<div id="profile-modal" style="display:none;">
+  <p><strong>Email :</strong> <span id="profile-email"></span></p>
+  <p><strong>Crédits :</strong> <span id="credits"></span></p>
+  <p><strong>Points :</strong> <span id="points"></span></p>
+</div>
 
   <section id="login-section" class="section" style="display:block;">
     <h2>Connexion / Inscription</h2>
@@ -128,6 +127,10 @@
     const shopSection = document.getElementById('shop');
     const hangarSection = document.getElementById('hangar');
     const avatarImg = document.getElementById('avatar');
+    avatarImg.addEventListener('click', () => {
+  profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
+});
+
     const pointsSpan = document.getElementById('points');
     const creditsSpan = document.getElementById('credits');
     const pointsGainedSpan = document.getElementById('points-gained');
