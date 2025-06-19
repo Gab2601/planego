@@ -204,11 +204,16 @@
 
     async function loadProfile() {
       if (!user) return;
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('credits, points, planes, avatar_url')
-        .eq('id', user.id)
-        .single();
+  const { data: profile, error } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', user.id)
+  .maybeSingle(); // ✅ Ne renvoie pas d’erreur si aucun résultat
+if (!profile) {
+  console.warn("Profil non trouvé pour cet utilisateur");
+  return;
+}
+
       if (error || !profile) return console.error("Erreur chargement profil:", error);
       
       // Affichage crédits, points, avions
