@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hangar Avion</title>
-  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0288d1" />
   <style>
     body {
@@ -113,7 +112,7 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  // Remplace par tes propres identifiants Supabase ici :
+  // Mets tes propres clés ici :
   const supabaseUrl = 'https://ixntiwcgvljrjbjnfjti.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk';
   const supabase = createClient(supabaseUrl, supabaseKey);
@@ -163,15 +162,21 @@
     if (!email || !password) return alert("Email et mot de passe requis");
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return alert(error.message);
-    // Crée un profil par défaut
-    await supabase.from('profiles').insert([{
-      id: data.user.id,
-      email: data.user.email,
-      credits: 5000,
-      points: 0,
-      planes: 0,
-      avatar_url: '/default-avatar.png'
-    }]);
+    if(data?.user) {
+      // Créer profil par défaut si inexistant
+      const { data: existing } = await supabase.from('profiles').select('id').eq('id', data.user.id).single();
+      if (!existing) {
+        await supabase.from('profiles').insert([{
+          id: data.user.id,
+          email: data.user.email,
+          credits: 5000,
+          points: 0,
+          planes: 0,
+          avatar_url: 'default-avatar.png'
+        }]);
+      }
+    }
+    alert('Compte créé ! Vérifie ta boîte mail pour confirmer.');
     await checkSession();
   }
 
@@ -190,40 +195,129 @@
       loginSection.style.display = 'block';
       logoutBtn.style.display = 'none';
       showSection('login-section');
+      resetUI();
     }
-  }
-
-  async function logout() {
-    await supabase.auth.signOut();
-    location.reload();
   }
 
   async function loadProfile() {
     if (!user) return;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (!profile) return;
-    pointsSpan.textContent = (profile.points || 0) + " pts";
-    creditsSpan.textContent = profile.credits || 0;
-    planesCountSpan.textContent = profile.planes || 0;
-    avatarImg.src = profile.avatar_url || '/default-avatar.png';
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (error) {
+      console.error(error);
+      return;
+    }
+    if (data) {
+      avatarImg.src = data.avatar_url || 'default-avatar.png';
+      pointsSpan.textContent = `${data.points || 0} pts`;
+      creditsSpan.textContent = data.credits || 0;
+      planesCountSpan.textContent = data.planes || 0;
+      profileModal.style.display = 'none';
+    }
+  }
+
+  function resetUI() {
+    avatarImg.src = 'default-avatar.png';
+    pointsSpan.textContent = '0 pts';
+    creditsSpan.textContent = '0';
+    planesCountSpan.textContent = '0';
+    hangarList.innerHTML = '';
+    shopItemsContainer.innerHTML = '';
+  }
+
+  avatarImg.addEventListener('click', () => {
+    if (!user) return;
+    profileModal.style.display = profileModal.style.display === 'none' ? 'block' : 'none';
+  });
+
+  avatarUpload.addEventListener('change', async (e) => {
+    if (!user) return alert('Connecte-toi d\'abord');
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-avatar.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+    if (uploadError) return alert('Erreur upload avatar : ' + uploadError.message);
+
+    // Récupérer URL publique
+    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+    if (!data.publicUrl) return alert("Erreur récupération URL avatar");
+
+    // Update profile avatar_url
+    const { error: updateError } = await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id);
+    if (updateError) return alert("Erreur mise à jour profil : " + updateError.message);
+
+    avatarImg.src = data.publicUrl;
+    profileModal.style.display = 'none';
+    avatarUpload.value = '';
+  });
+
+  photoInput.addEventListener('change', async (e) => {
+    if (!user) return alert('Connecte-toi d\'abord');
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const timestamp = Date.now();
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}_${timestamp}.${fileExt}`;
+    const filePath = `hangar/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage.from('hangar').upload(filePath, file);
+    if (uploadError) return alert("Erreur upload photo : " + uploadError.message);
+
+    const { data } = supabase.storage.from('hangar').getPublicUrl(filePath);
+
+    if (!data.publicUrl) return alert("Erreur récupération URL photo");
+
+    // Ajouter photo dans table hangar
+    const { error: insertError } = await supabase.from('hangar').insert([{ user_id: user.id, url: data.publicUrl }]);
+    if (insertError) return alert("Erreur ajout photo hangar : " + insertError.message);
+
+    photoInput.value = '';
+    loadHangar();
+    alert('Photo ajoutée au hangar !');
+  });
+
+  async function loadShop() {
+    shopItemsContainer.innerHTML = '';
+    for (const item of shopItems) {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <strong>${item.name}</strong> — Prix: ${item.price} crédits 
+        <button data-name="${item.name}" data-price="${item.price}">Acheter</button>
+      `;
+      shopItemsContainer.appendChild(div);
+
+      div.querySelector('button').addEventListener('click', async () => {
+        if (!user) return alert('Connecte-toi d\'abord');
+        const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (error) return alert('Erreur profil: ' + error.message);
+        if (profile.credits < item.price) return alert('Pas assez de crédits');
+        
+        // Déduire crédits et ajouter avion
+        const { error: updateError } = await supabase.from('profiles').update({
+          credits: profile.credits - item.price,
+          planes: (profile.planes || 0) + 1
+        }).eq('id', user.id);
+        if (updateError) return alert('Erreur mise à jour profil: ' + updateError.message);
+
+        alert(`Tu as acheté un ${item.name} !`);
+        await loadProfile();
+      });
+    }
   }
 
   async function loadHangar() {
+    hangarList.innerHTML = '';
     if (!user) return;
-    const { data, error } = await supabase
-      .from('photos')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error("Erreur chargement photos :", error);
+    const { data, error } = await supabase.from('hangar').select('*').eq('user_id', user.id);
+    if (error) return console.error(error);
+    if (!data || data.length === 0) {
+      hangarList.innerHTML = '<p>Aucune photo dans ton hangar.</p>';
       return;
     }
-    hangarList.innerHTML = "";
     data.forEach(photo => {
       const img = document.createElement('img');
       img.src = photo.url;
@@ -232,114 +326,18 @@
     });
   }
 
-  function loadShop() {
-    shopItemsContainer.innerHTML = "";
-    shopItems.forEach(item => {
-      const div = document.createElement('div');
-      div.textContent = `${item.name} - Prix : ${item.price} crédits`;
-      const btn = document.createElement('button');
-      btn.textContent = "Acheter";
-      btn.className = 'btn';
-      btn.onclick = () => buyItem(item);
-      div.appendChild(btn);
-      shopItemsContainer.appendChild(div);
-    });
-  }
-
-  async function buyItem(item) {
-    if (!user) return alert("Connecte-toi d'abord");
-    // Récupérer crédits et avions
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (!profile) return alert("Profil introuvable");
-    if (profile.credits < item.price) return alert("Pas assez de crédits !");
-    // Met à jour crédits et avions
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        credits: profile.credits - item.price,
-        planes: profile.planes + 1,
-        points: profile.points + 100  // bonus points achat
-      })
-      .eq('id', user.id);
-    if (error) return alert("Erreur lors de l'achat : " + error.message);
-    alert(`Bravo ! Tu as acheté un ${item.name}`);
-    await loadProfile();
-  }
-
-  async function uploadAvatar(file) {
-    if (!user) return alert("Connecte-toi d'abord");
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/avatar.${fileExt}`;
-    const { data, error } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, { upsert: true });
-    if (error) return alert("Erreur upload avatar : " + error.message);
-    const publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
-    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
-    avatarImg.src = publicUrl;
-  }
-
-  async function uploadPhoto(file) {
-    if (!user) return alert("Connecte-toi d'abord");
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/photos/${Date.now()}.${fileExt}`;
-    const { data, error } = await supabase.storage
-      .from('photos')
-      .upload(fileName, file, { upsert: false });
-    if (error) return alert("Erreur upload photo : " + error.message);
-    const publicUrl = supabase.storage.from('photos').getPublicUrl(fileName).data.publicUrl;
-    // Enregistre la photo dans la table photos
-    await supabase.from('photos').insert([{
-      user_id: user.id,
-      url: publicUrl,
-      created_at: new Date().toISOString()
-    }]);
-    // Donne des points au user pour la photo
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    await supabase.from('profiles').update({
-      points: profile.points + 100,
-      credits: profile.credits + 50
-    }).eq('id', user.id);
-    alert("Photo ajoutée, +100 pts et +50 crédits !");
-    await loadProfile();
-    await loadHangar();
-  }
-
-  // Gestion d'affichage et d'événements
-
-  avatarImg.addEventListener('click', () => {
-    if (user) profileModal.style.display = profileModal.style.display === 'none' ? 'block' : 'none';
-  });
-
-  avatarUpload.addEventListener('change', async (e) => {
-    if (e.target.files.length > 0) {
-      await uploadAvatar(e.target.files[0]);
-      profileModal.style.display = 'none';
-    }
-  });
-
-  photoInput.addEventListener('change', async (e) => {
-    if (e.target.files.length > 0) {
-      await uploadPhoto(e.target.files[0]);
-      photoInput.value = '';
-    }
+  logoutBtn.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    user = null;
+    checkSession();
   });
 
   document.getElementById('login-btn').addEventListener('click', login);
   document.getElementById('signup-btn').addEventListener('click', signup);
-  logoutBtn.addEventListener('click', logout);
 
-  // On load
+  // Au chargement de la page on vérifie la session
   checkSession();
-
 </script>
+
 </body>
 </html>
