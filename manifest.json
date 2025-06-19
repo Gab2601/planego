@@ -1,6 +1,6 @@
 {
-  "name": "Hangar Avion",
-  "short_name": "Hangar",
+  "name": "planego",
+  "short_name": "planego",
   "description": "Application pour gérer tes avions, acheter et gagner des crédits.",
   "start_url": "/index.html",
   "display": "standalone",
