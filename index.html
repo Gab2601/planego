@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hangar Avion</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0288d1" />
@@ -10,7 +10,7 @@
 </head>
 <body>
   <header>
-    <button id="profile-btn" style="background: none; border: none;">
+    <button id="profile-btn" style="background: none; border: none; cursor: pointer;">
       <img src="/default-avatar.png" id="avatar" alt="Avatar" style="width: 40px; border-radius: 50%;" />
       <span id="points">0 pts</span>
     </button>
@@ -21,14 +21,14 @@
     </nav>
   </header>
 
-  <div id="profile-modal">
+  <div id="profile-modal" style="display:none; position: fixed; top: 60px; left: 10px; background: white; padding: 15px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100;">
     <p><strong>Crédits :</strong> <span id="credits">0</span></p>
     <p><strong>Avions :</strong> <span id="planes-count">0</span></p>
     <input type="file" id="avatar-upload" accept="image/*" />
-    <button onclick="logout()">Déconnexion</button>
+    <button id="logout-btn">Déconnexion</button>
   </div>
 
-  <section id="login-section" class="section" style="display: block;">
+  <section id="login-section" class="section" style="display: block; max-width: 600px; margin: auto; padding: 20px;">
     <h2>Connexion</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Mot de passe" />
@@ -38,17 +38,17 @@
     <button class="btn" onclick="signup()">Créer un compte</button>
   </section>
 
-  <section id="photo" class="section">
+  <section id="photo" class="section" style="display:none; max-width: 600px; margin: auto; padding: 20px;">
     <h2>📸 Prends une photo d’un avion !</h2>
-    <input type="file" accept="image/*" capture="environment" id="photo-input">
+    <input type="file" accept="image/*" capture="environment" id="photo-input" />
   </section>
 
-  <section id="shop" class="section">
+  <section id="shop" class="section" style="display:none; max-width: 600px; margin: auto; padding: 20px;">
     <h2>🏪 Boutique</h2>
     <div id="shop-items"></div>
   </section>
 
-  <section id="hangar" class="section">
+  <section id="hangar" class="section" style="display:none; max-width: 600px; margin: auto; padding: 20px;">
     <h2>🛩️ Ton Hangar</h2>
     <ul id="hangar-list"></ul>
   </section>
@@ -56,7 +56,12 @@
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient('https://ixntiwcgvljrjbjnfjti.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk');
+    // Paramètres Supabase
+    const supabase = createClient(
+      'https://ixntiwcgvljrjbjnfjti.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
+    );
+
     let user = null;
 
     const items = [
@@ -68,31 +73,36 @@
     function showSection(id) {
       document.querySelectorAll(".section").forEach(s => s.style.display = "none");
       document.getElementById(id).style.display = "block";
+      document.getElementById('profile-modal').style.display = 'none';
     }
 
     async function login() {
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+      if (!email || !password) return alert("Email et mot de passe requis");
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return alert(error.message);
-      checkSession();
+      await checkSession();
     }
 
     async function signup() {
-      const email = document.getElementById('email').value;
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+      if (!email || !password) return alert("Email et mot de passe requis");
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) return alert(error.message);
-      // Créer profil dans table 'profiles'
-      await supabase.from('profiles').insert({
+
+      // Créer profil avec crédits, points etc
+      await supabase.from('profiles').insert([{
         id: data.user.id,
         email: data.user.email,
         credits: 5000,
         points: 0,
         planes: 0,
         avatar_url: '/default-avatar.png'
-      });
-      checkSession();
+      }]);
+
+      await checkSession();
     }
 
     async function checkSession() {
@@ -101,9 +111,12 @@
         user = session.user;
         document.getElementById('login-section').style.display = 'none';
         showSection('photo');
-        loadProfile();
+        await loadProfile();
         loadShop();
         loadHangar();
+      } else {
+        user = null;
+        document.getElementById('login-section').style.display = 'block';
       }
     }
 
@@ -113,39 +126,61 @@
     }
 
     async function loadProfile() {
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (!profile) return;
+      if (!user) return;
+      const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (error || !profile) return;
       document.getElementById('points').textContent = `${profile.points} pts`;
       document.getElementById('credits').textContent = profile.credits;
       document.getElementById('planes-count').textContent = profile.planes || 0;
       document.getElementById('avatar').src = profile.avatar_url || '/default-avatar.png';
     }
 
-    document.getElementById('profile-btn').onclick = () => {
+    document.getElementById('profile-btn').addEventListener('click', () => {
       const modal = document.getElementById('profile-modal');
       modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-    };
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', logout);
 
     document.getElementById('avatar-upload').addEventListener('change', async e => {
       const file = e.target.files[0];
-      if (!file || !user) return;
+      if (!file || !user) return alert("Utilisateur non connecté ou fichier invalide");
       const filename = `avatars/${user.id}.jpg`;
       const { error } = await supabase.storage.from('avatars').upload(filename, file, { upsert: true });
       if (error) return alert("Erreur avatar : " + error.message);
-      const { data: publicUrl } = supabase.storage.from('avatars').getPublicUrl(filename);
-      await supabase.from('profiles').update({ avatar_url: publicUrl.publicUrl }).eq('id', user.id);
-      document.getElementById('avatar').src = publicUrl.publicUrl;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filename);
+
+      // Mettre à jour dans profils
+      const { error: err2 } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+      if (err2) return alert("Erreur update avatar en base : " + err2.message);
+
+      document.getElementById('avatar').src = publicUrl;
     });
 
     document.getElementById('photo-input').addEventListener('change', async e => {
       const file = e.target.files[0];
-      if (!file || !user) return;
-      const filename = `${user.id}/${Date.now()}.jpg`;
+      if (!file || !user) return alert("Utilisateur non connecté ou fichier invalide");
+      const filename = `photos/${user.id}/${Date.now()}.jpg`;
+
       const { error } = await supabase.storage.from('photos').upload(filename, file);
       if (error) return alert("Erreur envoi : " + error.message);
-      const url = supabase.storage.from('photos').getPublicUrl(filename).data.publicUrl;
-      await supabase.from('photos').insert({ user_id: user.id, url });
-      await supabase.rpc('increment_profile_points_credits', { uid: user.id });
+
+      const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
+
+      // Insérer photo dans table photos
+      const { error: errInsert } = await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
+      if (errInsert) return alert("Erreur insertion photo en base : " + errInsert.message);
+
+      // Incrémente points + crédits (via RPC ou ici)
+      // Ici on fait simple : récupérer profil, ajouter points + credits, update
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (profile) {
+        const newCredits = profile.credits + 100;
+        const newPoints = profile.points + 10;
+        await supabase.from('profiles').update({ credits: newCredits, points: newPoints }).eq('id', user.id);
+      }
+
       alert("📸 Photo enregistrée !");
       loadProfile();
     });
@@ -159,27 +194,43 @@
         div.innerHTML = `
           <h3>${item.name}</h3>
           <p>${item.price} crédits</p>
-          <button class="btn" onclick="buyItem('${item.name}', ${item.price})">Acheter</button>
+          <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}">Acheter</button>
         `;
         container.appendChild(div);
       });
+
+      container.querySelectorAll('.buy-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+          const name = btn.dataset.name;
+          const price = parseInt(btn.dataset.price);
+          await buyItem(name, price);
+        });
+      });
     }
 
-    window.buyItem = async (name, price) => {
+    async function buyItem(name, price) {
+      if (!user) return alert("Connectez-vous d'abord");
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (!profile) return alert("Profil non trouvé");
       if (profile.credits < price) return alert("Pas assez de crédits !");
-      await supabase.from('profiles').update({
+      // Deduct credits, increase planes count
+      const { error } = await supabase.from('profiles').update({
         credits: profile.credits - price,
         planes: (profile.planes || 0) + 1
       }).eq('id', user.id);
-      await supabase.from('hangar').insert({ user_id: user.id, plane: name });
+      if (error) return alert("Erreur achat : " + error.message);
+      // Add plane to hangar
+      const { error: err2 } = await supabase.from('hangar').insert({ user_id: user.id, plane: name });
+      if (err2) return alert("Erreur ajout hangar : " + err2.message);
       alert(`${name} acheté !`);
-      loadProfile();
-      loadHangar();
-    };
+      await loadProfile();
+      await loadHangar();
+    }
 
     async function loadHangar() {
-      const { data } = await supabase.from('hangar').select('*').eq('user_id', user.id);
+      if (!user) return;
+      const { data, error } = await supabase.from('hangar').select('*').eq('user_id', user.id);
+      if (error) return alert("Erreur chargement hangar : " + error.message);
       const list = document.getElementById('hangar-list');
       list.innerHTML = '';
       data.forEach(entry => {
@@ -189,11 +240,13 @@
       });
     }
 
+    // Expose fonctions globales
     window.showSection = showSection;
     window.login = login;
     window.signup = signup;
     window.logout = logout;
 
+    // Au chargement, vérifier session
     checkSession();
   </script>
 </body>
