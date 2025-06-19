@@ -285,6 +285,8 @@
 
       // IMPORTANT : Pour le bucket "photos", ne pas inclure "photos/" dans le chemin,
       // car la méthode upload() utilise déjà le bucket choisi.
+       const file = e.target.files[0];
+       console.log("Fichier sélectionné :", file);
       const filename = `${user.id}/${Date.now()}.jpg`;
       const { error } = await supabase.storage
         .from('photos')
