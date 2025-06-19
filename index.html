@@ -279,38 +279,45 @@
     });
   });
 }
+async function buyItem(name, price) {
+  if (!user) return alert("Connectez-vous d'abord");
+
+  // Récupère le profil de l'utilisateur
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('credits, planes')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !profile) {
+    console.error("Erreur chargement profil pour achat:", error);
+    return alert("Impossible de vérifier vos crédits");
+  }
+
+  if (profile.credits < price) {
+    return alert("❌ Crédits insuffisants !");
+  }
+
+  // Met à jour les crédits et ajoute un avion
+  const { error: updateError } = await supabase.from('profiles').update({
+    credits: profile.credits - price,
+    planes: (profile.planes || 0) + 1
+  }).eq('id', user.id);
+
+  if (updateError) {
+    console.error("Erreur mise à jour profil après achat:", updateError);
+    return alert("Erreur lors de l'achat");
+  }
+
+  // Ajoute dans le hangar
+  await supabase.from('hangar').insert({ user_id: user.id, plane: name });
+
+  alert(`✅ Vous avez acheté ${name} !`);
+  await loadProfile();
+}
 
 
-    async function buyItem(item) {
-      if (!user) return alert("Veuillez vous connecter.");
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (error || !profile) return alert("Erreur profil");
-      if (profile.credits < item.price) return alert("Crédits insuffisants.");
 
-      const newCredits = profile.credits - item.price;
-      const newPoints = (profile.points || 0) + 10;
-      const newPlanes = (profile.planes || 0) + 1;
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          credits: newCredits,
-          points: newPoints,
-          planes: newPlanes
-        })
-        .eq('id', user.id);
-
-      if (updateError) return alert("Erreur achat: " + updateError.message);
-
-      alert(`Vous avez acheté ${item.name} ! +10 points`);
-      await loadProfile();
-    }
-
-    async function uploadPhoto(file) {
       if (!user) return alert("Veuillez vous connecter.");
 
       const fileExt = file.name.split('.').pop();
@@ -346,7 +353,7 @@
 
       if (profileError || !profile) return alert("Erreur profil");
 
-      const newPoints = (profile.points || 0) + 5;
+      const newPoints = (profile.points || 0) + 300;
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ points: newPoints })
@@ -354,7 +361,7 @@
 
       if (updateError) return alert("Erreur mise à jour points: " + updateError.message);
 
-      alert("Photo ajoutée ! +5 points");
+      alert("Photo ajoutée ! +300points");
       await loadProfile();
       await loadHangar();
     }
