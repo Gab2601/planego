@@ -1,4 +1,4 @@
-const CACHE_NAME = "hangar-cache-v1";
+const CACHE_NAME = "planego-v1";
 const urlsToCache = [
   "/",
   "/index.html",
