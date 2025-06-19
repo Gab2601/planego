@@ -275,26 +275,47 @@
       await loadProfile();
     }
 
-    photoInput.addEventListener('change', async e => {
-      if (!user) return alert("Connectez-vous d'abord");
-      const file = e.target.files[0];
-      if (!file) return alert("Fichier invalide");
-      const filename = `${user.id}/${Date.now()}.jpg`;
-      const { error } = await supabase.storage.from('photos').upload(filename, file);
-      if (error) return alert("Erreur envoi : " + error.message);
-      const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
-      await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
-      const { data: profile } = await supabase.from('profiles').select('points, credits').eq('id', user.id).single();
-      if (profile) {
-        await supabase.from('profiles').update({
-          points: (profile.points || 0) + 10,
-          credits: (profile.credits || 0) + 100
-        }).eq('id', user.id);
-      }
-      alert("📸 Photo enregistrée !");
-      await loadProfile();
-      await loadHangar();
+   photoInput.addEventListener('change', async e => {
+  if (!user) return alert("Connectez-vous d'abord");
+
+  const file = e.target.files[0];
+  if (!file) return alert("Fichier invalide");
+
+  const filename = `${user.id}/${Date.now()}-${file.name}`;
+  console.log("Uploading to:", filename);
+
+  const { error: uploadError } = await supabase
+    .storage
+    .from('photos') // Assure-toi que le bucket s'appelle bien 'photos'
+    .upload(filename, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type
     });
+
+  if (uploadError) {
+    console.error("Erreur d'upload :", uploadError);
+    return alert("Erreur d'envoi : " + uploadError.message);
+  }
+
+  const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
+
+  await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
+
+  // Mise à jour des points et crédits
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (profile) {
+    await supabase.from('profiles').update({
+      points: (profile.points || 0) + 10,
+      credits: (profile.credits || 0) + 100
+    }).eq('id', user.id);
+  }
+
+  alert("📸 Photo enregistrée !");
+  await loadProfile();
+  await loadHangar();
+});
+
 
     // Optionnel : gestion upload avatar (pas demandé explicitement, mais prêt)
     avatarUpload.addEventListener('change', async e => {
