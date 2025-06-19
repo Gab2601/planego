@@ -176,23 +176,36 @@
     });
   }
 
-  window.buyItem = async function(name, price, image_url) {
-    if (!user) return alert("Connectez-vous d'abord");
-    const { data: profile } = await supabase.from('profiles').select('credits, planes, points').eq('id', user.id).single();
-    if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
-    
-    await supabase.from('profiles').update({
-      credits: profile.credits - price,
-      points: (profile.points || 0) + 100,
-      planes: (profile.planes || 0) + 1
-    }).eq('id', user.id);
+  window.buyItem = async function(name, price) {
+  if (!user) return alert("Connectez-vous d'abord");
 
-    await supabase.from('hangar').insert({ user_id: user.id, plane: name, image_url });
+  // Récupère le profil
+  const { data: profile } = await supabase.from('profiles').select('credits, planes').eq('id', user.id).single();
+  if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
 
-    alert(`✅ Vous avez acheté ${name} !`);
-    await loadProfile();
-    await loadHangar();
-  };
+  // Récupère les infos du produit dans la boutique pour récupérer l'image
+  const { data: items } = await supabase.from('shop_items').select('image_url').eq('name', name);
+  const image_url = items?.[0]?.image_url || '';
+
+  // Mets à jour les crédits et compte d'avions
+  await supabase.from('profiles').update({
+    credits: profile.credits - price,
+    planes: (profile.planes || 0) + 1
+  }).eq('id', user.id);
+
+  // Ajoute l'avion dans le hangar avec l'image
+  await supabase.from('hangar').insert({
+    user_id: user.id,
+    plane: name,
+    image_url: image_url
+  });
+
+  alert(`✅ Vous avez acheté ${name} !`);
+
+  await loadProfile();
+  await loadHangar();
+};
+
 
  async function loadHangar() {
   hangarContainer.innerHTML = "";
