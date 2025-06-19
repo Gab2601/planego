@@ -343,14 +343,22 @@ if (!profile) {
     document.getElementById('signup-btn').addEventListener('click', signup);
     logoutBtn.addEventListener('click', logout);
 
-    window.onload = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        user = session.user;
-        await checkSession();
-      } else {
-        showSection('login-section');
-      }
+
+      window.onload = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    user = session.user;
+    await checkSession();
+  } else {
+    showSection('login-section');
+  }
+
+  // ⬇️ Le listener ici est safe aussi
+  avatarImg.addEventListener('click', () => {
+    profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
+  });
+};
+
     };
 
     window.showSection = showSection;
