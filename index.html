@@ -249,18 +249,37 @@
       });
     }
 
-    function loadShop() {
-      shopItemsContainer.innerHTML = '';
-      shopItems.forEach(item => {
-        const div = document.createElement('div');
-        div.textContent = `${item.name} - Prix: ${item.price} crédits`;
-        const btn = document.createElement('button');
-        btn.textContent = 'Acheter';
-        btn.addEventListener('click', () => buyItem(item));
-        div.appendChild(btn);
-        shopItemsContainer.appendChild(div);
-      });
-    }
+    async function loadShop() {
+  shopItemsContainer.innerHTML = "";
+
+  const { data: items, error } = await supabase
+    .from('shop-items')
+    .select('*');
+
+  if (error) {
+    console.error("Erreur chargement boutique :", error);
+    return;
+  }
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <h3>${item.name}</h3>
+      <img src="${item.image_url}" alt="${item.name}" style="max-width:100%; border-radius:8px; margin-bottom:10px;">
+      <p>Prix : ${item.price} crédits</p>
+      <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}">Acheter</button>
+    `;
+    shopItemsContainer.appendChild(div);
+  });
+
+  // Ajoute les listeners achat
+  document.querySelectorAll('.buy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await buyItem(btn.dataset.name, parseInt(btn.dataset.price));
+    });
+  });
+}
+
 
     async function buyItem(item) {
       if (!user) return alert("Veuillez vous connecter.");
