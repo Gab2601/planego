@@ -207,44 +207,11 @@
 };
 
 
- async function loadHangar() {
-  hangarContainer.innerHTML = "";
-
-  // 1. Photos perso (prises via caméra)
-  const { data: photos } = await supabase.from('photos').select('url').eq('user_id', user.id);
-  if (photos && photos.length > 0) {
-    const section = document.createElement('div');
-    section.innerHTML = `<h3>📸 Tes photos</h3>`;
-    photos.forEach(photo => {
-      const img = document.createElement('img');
-      img.src = photo.url;
-      img.className = 'photo-thumb';
-      section.appendChild(img);
-    });
-    hangarContainer.appendChild(section);
-  }
-
-  // 2. Avions achetés depuis la boutique
-  const { data: avions } = await supabase.from('hangar').select('*').eq('user_id', user.id);
-  if (avions && avions.length > 0) {
-    const section = document.createElement('div');
-    section.innerHTML += `<h3>✈️ Tes avions achetés</h3>`;
-    avions.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'shop-item';
-      div.innerHTML = `
-        <h4>${item.plane}</h4>
-        <img src="${item.image_url}" alt="${item.plane}" />
-      `;
-      section.appendChild(div);
-    });
-    hangarContainer.appendChild(section);
-  }
-
-  // Si vide
-  if ((!photos || photos.length === 0) && (!avions || avions.length === 0)) {
-    hangarContainer.innerHTML = "<p>🛩️ Rien dans ton hangar pour le moment.</p>";
-  }
+ #hangar-list img {
+  transition: transform 0.2s;
+}
+#hangar-list img:hover {
+  transform: scale(1.05);
 }
 
 
