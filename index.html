@@ -140,7 +140,7 @@
     document.getElementById('photo-input').addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file || !user) return;
-      const filename = `photos/${user.id}/${Date.now()}.jpg`;
+      const filename = `${user.id}/${Date.now()}.jpg`;
       const { error } = await supabase.storage.from('photos').upload(filename, file);
       if (error) return alert("Erreur envoi : " + error.message);
       const url = supabase.storage.from('photos').getPublicUrl(filename).data.publicUrl;
