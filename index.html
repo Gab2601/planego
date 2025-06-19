@@ -4,286 +4,113 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hangar Avion</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0288d1" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      margin: 0;
-      padding: 0;
+      max-width: 700px;
+      margin: auto;
+      padding: 1em;
+      background-color: #e3f2fd;
     }
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
-      background-color: #1565c0;
-      color: white;
+      margin-bottom: 1em;
     }
     nav button, #logout-btn {
-      background: #1e88e5;
-      border: none;
-      padding: 10px;
+      background-color: #0288d1;
       color: white;
-      margin: 0 5px;
-      border-radius: 5px;
+      border: none;
+      padding: 0.5em 1em;
+      margin-right: 0.5em;
       cursor: pointer;
+      border-radius: 4px;
     }
     .section {
       display: none;
-      padding: 20px;
-    }
-    #login-section {
-      display: block;
+      background: white;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 1em;
     }
     #profile-modal {
-      display: none;
-      position: absolute;
+      position: fixed;
       top: 60px;
-      right: 20px;
+      right: 10px;
       background: white;
+      padding: 15px;
       border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 5px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 100;
+    }
+    .btn {
+      padding: 0.5em 1em;
+      cursor: pointer;
+    }
+    #avatar {
+      width: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 0.5em; }
+    .photo-thumb {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <header>
     <div>
-      <img src="default-avatar.png" id="avatar" style="width:40px;border-radius:50%;cursor:pointer" />
+      <img src="default-avatar.png" id="avatar" alt="Avatar" />
       <span id="points">0 pts</span>
     </div>
     <nav>
-      <button id="btn-photo">📸</button>
-      <button id="btn-shop">🏪</button>
-      <button id="btn-hangar">🛩️</button>
-      <button id="logout-btn">Déconnexion</button>
+      <button class="btn" onclick="showSection('photo')">📸 Photo</button>
+      <button class="btn" onclick="showSection('shop')">🏪 Boutique</button>
+      <button class="btn" onclick="showSection('hangar')">🛩️ Hangar</button>
     </nav>
+    <button id="logout-btn" class="btn" style="display:none;">Déconnexion</button>
   </header>
 
-  <div id="profile-modal">
-    <p>Crédits: <span id="credits">0</span></p>
-    <p>Avions: <span id="planes-count">0</span></p>
+  <div id="profile-modal" style="display:none;">
+    <p><strong>Crédits :</strong> <span id="credits">0</span></p>
+    <p><strong>Avions :</strong> <span id="planes-count">0</span></p>
     <input type="file" id="avatar-upload" accept="image/*" />
   </div>
 
-  <section id="login-section" class="section">
-    <h2>Connexion</h2>
+  <section id="login-section" class="section" style="display:block;">
+    <h2>Connexion / Inscription</h2>
     <input type="email" id="email" placeholder="Email" /><br><br>
     <input type="password" id="password" placeholder="Mot de passe" /><br><br>
-    <button id="login-btn">Connexion</button>
-    <button id="signup-btn">Créer un compte</button>
+    <button class="btn" id="login-btn">Connexion</button>
+    <button class="btn" id="signup-btn">Créer un compte</button>
   </section>
 
   <section id="photo" class="section">
-    <h2>Photo</h2>
+    <h2>📸 Prends une photo d’un avion !</h2>
     <input type="file" accept="image/*" capture="environment" id="photo-input" />
-    <ul id="photos-list"></ul>
   </section>
 
   <section id="shop" class="section">
-    <h2>Boutique</h2>
+    <h2>🏪 Boutique</h2>
     <div id="shop-items"></div>
   </section>
 
   <section id="hangar" class="section">
-    <h2>Hangar</h2>
-    <ul id="hangar-list"></ul>
+    <h2>🛩️ Ton Hangar (Photos)</h2>
+    <div id="hangar-list"></div>
   </section>
-  <!-- (Garde le même HTML jusqu'à <script type="module">) -->
 
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script type="module" src="app.js"></script>
+</body>
+</html>
 
-  const supabaseUrl = 'https://ixntiwcgvljrjbjnfjti.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  let user = null;
-
-  // DOM Elements
-  const loginSection = document.getElementById('login-section');
-  const photoSection = document.getElementById('photo');
-  const shopSection = document.getElementById('shop');
-  const hangarSection = document.getElementById('hangar');
-  const avatarImg = document.getElementById('avatar');
-  const profileModal = document.getElementById('profile-modal');
-  const logoutBtn = document.getElementById('logout-btn');
-  const profilePoints = document.getElementById('points');
-  const profileCredits = document.getElementById('credits');
-  const profilePlanes = document.getElementById('planes-count');
-  const avatarUpload = document.getElementById('avatar-upload');
-  const photoInput = document.getElementById('photo-input');
-  const shopItemsContainer = document.getElementById('shop-items');
-  const hangarList = document.getElementById('hangar-list');
-
-  const shopItems = [
-    { name: "F16", price: 3000 },
-    { name: "A400M", price: 2000 },
-    { name: "A380", price: 1500 }
-  ];
-
-  function showSection(id) {
-    [loginSection, photoSection, shopSection, hangarSection].forEach(sec => {
-      sec.style.display = (sec.id === id) ? 'block' : 'none';
-    });
-    profileModal.style.display = 'none';
-  }
-
-  async function login() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Email et mot de passe requis");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return alert(error.message);
-    await checkSession();
-  }
-
-  async function signup() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Email et mot de passe requis");
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return alert(error.message);
-    await supabase.from('profiles').insert([{
-      id: data.user.id,
-      email: data.user.email,
-      credits: 5000,
-      points: 0,
-      planes: 0,
-      avatar_url: '/default-avatar.png'
-    }]);
-    await checkSession();
-  }
-
-  async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      user = session.user;
-      loginSection.style.display = 'none';
-      logoutBtn.style.display = 'inline-block';
-      showSection('photo');
-      await loadProfile();
-      loadShop();
-      loadHangar();
-    } else {
-      user = null;
-      loginSection.style.display = 'block';
-      logoutBtn.style.display = 'none';
-    }
-  }
-
-  async function logout() {
-    await supabase.auth.signOut();
-    location.reload();
-  }
-
-  async function loadProfile() {
-    if (!user) return;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (!profile) return;
-    profilePoints.textContent = `${profile.points || 0} pts`;
-    profileCredits.textContent = profile.credits || 0;
-    profilePlanes.textContent = profile.planes || 0;
-    avatarImg.src = profile.avatar_url || '/default-avatar.png';
-  }
-
-  async function loadHangar() {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('photos')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (error) return console.error("Erreur chargement photos :", error);
-    hangarList.innerHTML = "";
-    data.forEach(photo => {
-      const img = document.createElement('img');
-      img.src = photo.url;
-      img.className = 'photo-thumb';
-      hangarList.appendChild(img);
-    });
-  }
-
-  function loadShop() {
-    shopItemsContainer.innerHTML = "";
-    shopItems.forEach(item => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <h3>${item.name}</h3>
-        <p>Prix : ${item.price} crédits</p>
-        <button class="btn buy-btn" data-name="${item.name}" data-price="${item.price}">Acheter</button>
-      `;
-      shopItemsContainer.appendChild(div);
-    });
-    document.querySelectorAll('.buy-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        await buyItem(btn.dataset.name, parseInt(btn.dataset.price));
-      });
-    });
-  }
-
-  async function buyItem(name, price) {
-    if (!user) return alert("Connectez-vous d'abord");
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (!profile || profile.credits < price) return alert("Crédits insuffisants");
-    await supabase.from('profiles').update({
-      credits: profile.credits - price,
-      planes: (profile.planes || 0) + 1
-    }).eq('id', user.id);
-    await supabase.from('hangar').insert({ user_id: user.id, plane: name });
-    alert(`Vous avez acheté ${name} !`);
-    await loadProfile();
-  }
-
-  photoInput.addEventListener('change', async e => {
-    if (!user) return alert("Connectez-vous d'abord");
-    const file = e.target.files[0];
-    if (!file) return alert("Fichier invalide");
-    const filename = `${user.id}/${Date.now()}.jpg`;
-    const { error } = await supabase.storage.from('photos').upload(filename, file);
-    if (error) return alert("Erreur envoi : " + error.message);
-    const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
-    await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (profile) {
-      await supabase.from('profiles').update({
-        points: (profile.points || 0) + 10,
-        credits: (profile.credits || 0) + 100
-      }).eq('id', user.id);
-    }
-    alert("📸 Photo enregistrée !");
-    await loadProfile();
-    await loadHangar();
-  });
-
-  // Gère l’avatar click
-  avatarImg.addEventListener('click', () => {
-    profileModal.style.display = (profileModal.style.display === 'none') ? 'block' : 'none';
-  });
-
-  document.getElementById('login-btn').addEventListener('click', login);
-  document.getElementById('signup-btn').addEventListener('click', signup);
-  logoutBtn.addEventListener('click', logout);
-
-  window.onload = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      user = session.user;
-      await checkSession();
-    } else {
-      showSection('login-section');
-    }
-  };
-
-  window.showSection = showSection;
-</script>
-<body/>
