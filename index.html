@@ -5,77 +5,291 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>planego</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: auto;
-      padding: 1em;
-      background-color: #e3f2fd;
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
     }
+    body {
+      margin: 0;
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: linear-gradient(135deg, #3a9bdc, #70c1f7);
+      color: #222;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
     header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 1em;
+      justify-content: space-between;
+      background: rgba(255 255 255 / 0.15);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      margin-bottom: 25px;
+      backdrop-filter: blur(8px);
+      user-select: none;
     }
-    nav button, #logout-btn {
-      background-color: #0288d1;
+
+    #avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+      cursor: pointer;
+      transition: transform 0.25s ease;
+      box-shadow: 0 0 10px rgba(255,255,255,0.6);
+    }
+    #avatar:hover {
+      transform: scale(1.1);
+    }
+
+    #points, #header-credits {
+      font-weight: 600;
+      color: white;
+      margin-left: 12px;
+      font-size: 1.1rem;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      flex-grow: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    nav {
+      display: flex;
+      gap: 12px;
+    }
+    nav button {
+      background: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #0277bd;
+      box-shadow: 0 3px 6px rgba(0, 119, 189, 0.3);
+      transition: background-color 0.3s, color 0.3s;
+      user-select: none;
+    }
+    nav button:hover, nav button:focus {
+      background: #0277bd;
+      color: white;
+      outline: none;
+      box-shadow: 0 0 15px #0277bd;
+    }
+
+    #logout-btn {
+      background-color: #d32f2f;
       color: white;
       border: none;
-      padding: 0.5em 1em;
-      margin-right: 0.5em;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .section {
-      display: none;
-      background: white;
-      padding: 1em;
+      padding: 10px 20px;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-top: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(211, 47, 47, 0.4);
+      transition: background-color 0.3s;
+      user-select: none;
     }
+    #logout-btn:hover {
+      background-color: #b71c1c;
+    }
+
+    /* Profile Modal */
     #profile-modal {
       position: fixed;
-      top: 60px;
-      right: 10px;
+      top: 70px;
+      right: 20px;
       background: white;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 100;
+      border-radius: 12px;
+      padding: 18px 25px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      width: 260px;
+      z-index: 150;
       display: none;
+      font-size: 0.95rem;
+      user-select: none;
     }
-    #avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+    #profile-modal p {
+      margin: 8px 0;
+      font-weight: 500;
+      color: #444;
+    }
+    #profile-modal strong {
+      color: #0277bd;
+    }
+
+    /* Sections */
+    section.section {
+      background: white;
+      border-radius: 12px;
+      padding: 25px 30px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      min-height: 250px;
+      user-select: text;
+    }
+    section.section h2 {
+      margin-top: 0;
+      font-weight: 700;
+      font-size: 1.6rem;
+      color: #0277bd;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+
+    /* Login Section */
+    #login-section input[type="email"],
+    #login-section input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1.8px solid #ddd;
+      margin-bottom: 18px;
+      transition: border-color 0.25s ease;
+    }
+    #login-section input[type="email"]:focus,
+    #login-section input[type="password"]:focus {
+      border-color: #0277bd;
+      outline: none;
+    }
+    #login-section button {
+      background-color: #0277bd;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-right: 15px;
       cursor: pointer;
-      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(2, 119, 189, 0.5);
+      transition: background-color 0.3s;
+      user-select: none;
     }
+    #login-section button:hover {
+      background-color: #015a8a;
+    }
+
+    /* Gallery */
     .gallery {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 16px;
+      justify-content: start;
     }
     .gallery img {
       width: 150px;
       height: 100px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.2s;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      user-select: none;
     }
     .gallery img:hover {
-      transform: scale(1.05);
+      transform: scale(1.1);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+    .gallery p {
+      color: #777;
+      font-style: italic;
+      width: 100%;
+      user-select: none;
+    }
+
+    /* Shop items */
+    #shop-items > div {
+      border: 1.5px solid #ddd;
+      border-radius: 12px;
+      padding: 15px 18px;
+      width: 200px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(2,119,189,0.1);
+      user-select: none;
+      background: #f7fbff;
+      transition: box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    #shop-items > div:hover {
+      box-shadow: 0 5px 20px rgba(2,119,189,0.3);
+    }
+    #shop-items h3 {
+      margin-top: 0;
+      font-weight: 700;
+      color: #014f7d;
+      margin-bottom: 12px;
+      font-size: 1.15rem;
+    }
+    #shop-items img {
+      max-width: 100%;
+      height: 110px;
+      object-fit: contain;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      background: white;
+      padding: 8px;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+    }
+    #shop-items p {
+      margin: 10px 0;
+      font-weight: 600;
+      color: #0277bd;
+      font-size: 1rem;
+    }
+    .buy-btn {
+      background-color: #0288d1;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      user-select: none;
+    }
+    .buy-btn:hover {
+      background-color: #026aa7;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      nav {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      #shop-items > div {
+        width: 45vw;
+      }
+      .gallery img {
+        width: 45vw;
+        height: 30vw;
+      }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div>
+  <div class="user-info">
     <img src="default-avatar.png" id="avatar" alt="Avatar" />
     <span id="points">0 pts</span> | <span id="header-credits">0💰</span>
   </div>
@@ -95,21 +309,23 @@
 
 <section id="login-section" class="section" style="display:block;">
   <h2>Connexion / Inscription</h2>
-  <input type="email" id="email" placeholder="Email" /><br><br>
-  <input type="password" id="password" placeholder="Mot de passe" /><br><br>
-  <button id="login-btn">Connexion</button>
-  <button id="signup-btn">Créer un compte</button>
+  <input type="email" id="email" placeholder="Email" autocomplete="username" />
+  <input type="password" id="password" placeholder="Mot de passe" autocomplete="current-password" />
+  <div>
+    <button id="login-btn">Connexion</button>
+    <button id="signup-btn">Créer un compte</button>
+  </div>
 </section>
 
 <section id="photo" class="section">
   <h2>📸 Galerie photos</h2>
-  <input type="file" accept="image/*" capture="environment" id="photo-input" />
+  <input type="file" accept="image/*" capture="environment" id="photo-input" style="margin-bottom:20px; border-radius:8px; border:1.5px solid #0277bd; padding:8px; cursor:pointer;" />
   <div id="gallery" class="gallery"></div>
 </section>
 
 <section id="shop" class="section">
   <h2>🏪 Boutique</h2>
-  <div id="shop-items"></div>
+  <div id="shop-items" class="gallery" style="justify-content:flex-start;"></div>
 </section>
 
 <section id="hangar" class="section">
@@ -260,56 +476,42 @@
     });
   }
 
-  document.getElementById('photo-input').addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file || !user) return alert("Fichier invalide ou non connecté");
-    const filename = `${user.id}/${Date.now()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage.from('photos').upload(filename, file);
-    if (uploadError && uploadError.message !== 'The resource already exists') return alert("Erreur d'envoi : " + uploadError.message);
-    const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
-    await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    await supabase.from('profiles').update({
-      credits: (profile.credits || 0) + 1500,
-      points: (profile.points || 0) + 200
-    }).eq('id', user.id);
-    alert("📸 Photo enregistrée !");
-    e.target.value = "";
-    await loadProfile();
-    await loadGallery();
-  });
-
   document.getElementById('login-btn').addEventListener('click', async () => {
     const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Remplissez les champs");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return alert(error.message);
+    const password = document.getElementById('password').value.trim();
+    if (!email || !password) return alert("Email et mot de passe requis");
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return alert("Erreur de connexion : " + error.message);
     await checkSession();
   });
 
   document.getElementById('signup-btn').addEventListener('click', async () => {
     const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Remplissez les champs");
+    const password = document.getElementById('password').value.trim();
+    if (!email || !password) return alert("Email et mot de passe requis");
     const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return alert(error.message);
-    await supabase.from('profiles').insert({
-      id: data.user.id,
-      email: data.user.email,
-      credits: 0,
-      points: 0,
-      avatar_url: 'default-avatar.png'
-    });
-    await checkSession();
+    if (error) return alert("Erreur inscription : " + error.message);
+    
   });
 
   logoutBtn.addEventListener('click', async () => {
     await supabase.auth.signOut();
-    location.reload();
+    user = null;
+    showSection('login-section');
+    logoutBtn.style.display = 'none';
+    avatar.src = 'default-avatar.png';
+    pointsDisplay.textContent = "0 pts";
+    creditsDisplay.textContent = "0💰";
   });
 
-  window.onload = checkSession;
+  // Masquer profil si clic en dehors
+  document.addEventListener('click', e => {
+    if (!profileModal.contains(e.target) && e.target !== avatar) {
+      profileModal.style.display = 'none';
+    }
+  });
+
+  checkSession();
 </script>
 
 </body>
