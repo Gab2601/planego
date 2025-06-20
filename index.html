@@ -231,22 +231,37 @@
     await loadHangar();
   }
 
-  async function loadHangar() {
-    if (!user) return;
-    const { data, error } = await supabase.from('hangar').select('*').eq('user_id', user.id);
-    if (error) return console.error("Erreur hangar:", error);
-    hangarGrid.innerHTML = '';
-    if (!data || data.length === 0) {
-      hangarGrid.innerHTML = "<p>Pas encore d'avions achetés.</p>";
-      return;
-    }
-    data.forEach(plane => {
-      const img = document.createElement('img');
-      img.src = plane.image_url;
-      img.alt = plane.plane;
-      hangarGrid.appendChild(img);
-    });
+async function loadHangar() {
+  if (!user) return;
+  hangarGrid.innerHTML = '';
+
+  const [planesRes, photosRes] = await Promise.all([
+    supabase.from('hangar').select('*').eq('user_id', user.id),
+    supabase.from('photos').select('*').eq('user_id', user.id)
+  ]);
+
+  if (planesRes.error || photosRes.error) {
+    console.error("Erreur récupération hangar/photos:", planesRes.error || photosRes.error);
+    return;
   }
+
+  const items = [
+    ...(planesRes.data || []).map(p => ({ type: 'avion', url: p.image_url })),
+    ...(photosRes.data || []).map(p => ({ type: 'photo', url: p.url }))
+  ];
+
+  if (items.length === 0) {
+    hangarGrid.innerHTML = "<p>Ton hangar est vide pour l’instant.</p>";
+    return;
+  }
+
+  items.forEach(item => {
+    const img = document.createElement('img');
+    img.src = item.url;
+    img.alt = item.type;
+    hangarGrid.appendChild(img);
+  });
+}
 
   document.getElementById('photo-input').addEventListener('change', async e => {
     const file = e.target.files[0];
