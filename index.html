@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>planego</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
 
-    /* Reset & base */
     * {
       box-sizing: border-box;
     }
+
     body {
       margin: 0;
       font-family: 'Montserrat', Arial, sans-serif;
@@ -19,46 +19,27 @@
       max-width: 900px;
       margin-left: auto;
       margin-right: auto;
-      padding: 20px;
+      padding: 15px 10px 40px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Header */
     header {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       background: rgba(255 255 255 / 0.15);
-      padding: 15px 20px;
+      padding: 12px 15px;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       backdrop-filter: blur(8px);
       user-select: none;
-    }
-
-    #avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid white;
-      cursor: pointer;
-      transition: transform 0.25s ease;
-      box-shadow: 0 0 10px rgba(255,255,255,0.6);
-    }
-    #avatar:hover {
-      transform: scale(1.1);
-    }
-
-    #points, #header-credits {
-      font-weight: 600;
-      color: white;
-      margin-left: 12px;
-      font-size: 1.1rem;
-      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+      gap: 12px;
     }
 
     .user-info {
@@ -67,24 +48,55 @@
       flex-grow: 1;
       min-width: 0;
       overflow: hidden;
+      gap: 10px;
+    }
+
+    #avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+      cursor: pointer;
+      transition: transform 0.25s ease;
+      box-shadow: 0 0 10px rgba(255,255,255,0.6);
+      flex-shrink: 0;
+    }
+    #avatar:hover {
+      transform: scale(1.1);
+    }
+
+    #points, #header-credits {
+      font-weight: 600;
+      color: white;
+      font-size: 1rem;
+      white-space: nowrap;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
     }
 
     nav {
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      flex-grow: 1;
+      min-width: 180px;
     }
     nav button {
       background: white;
       border: none;
-      padding: 10px 18px;
+      padding: 9px 14px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #0277bd;
       box-shadow: 0 3px 6px rgba(0, 119, 189, 0.3);
       transition: background-color 0.3s, color 0.3s;
       user-select: none;
+      flex-grow: 1;
+      min-width: 70px;
+      text-align: center;
     }
     nav button:hover, nav button:focus {
       background: #0277bd;
@@ -97,32 +109,34 @@
       background-color: #d32f2f;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 16px;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
       box-shadow: 0 3px 6px rgba(211, 47, 47, 0.4);
       transition: background-color 0.3s;
       user-select: none;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     #logout-btn:hover {
       background-color: #b71c1c;
     }
 
-    /* Profile Modal */
     #profile-modal {
       position: fixed;
-      top: 70px;
-      right: 20px;
+      top: 65px;
+      right: 12px;
       background: white;
       border-radius: 12px;
-      padding: 18px 25px;
+      padding: 16px 20px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-      width: 260px;
+      width: 240px;
       z-index: 150;
       display: none;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       user-select: none;
+      word-break: break-word;
     }
     #profile-modal p {
       margin: 8px 0;
@@ -133,35 +147,36 @@
       color: #0277bd;
     }
 
-    /* Sections */
     section.section {
       background: white;
       border-radius: 12px;
-      padding: 25px 30px;
+      padding: 20px 22px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       min-height: 250px;
       user-select: text;
     }
     section.section h2 {
       margin-top: 0;
       font-weight: 700;
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       color: #0277bd;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       user-select: none;
+      text-align: center;
     }
 
     /* Login Section */
     #login-section input[type="email"],
     #login-section input[type="password"] {
       width: 100%;
-      padding: 12px 15px;
+      padding: 11px 14px;
       font-size: 1rem;
       border-radius: 8px;
       border: 1.8px solid #ddd;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       transition: border-color 0.25s ease;
+      font-family: inherit;
     }
     #login-section input[type="email"]:focus,
     #login-section input[type="password"]:focus {
@@ -172,36 +187,45 @@
       background-color: #0277bd;
       color: white;
       border: none;
-      padding: 12px 20px;
+      padding: 12px 22px;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 1.1rem;
-      margin-right: 15px;
+      font-size: 1.05rem;
+      margin-right: 12px;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(2, 119, 189, 0.5);
       transition: background-color 0.3s;
       user-select: none;
+      flex-grow: 1;
+      min-width: 120px;
     }
     #login-section button:hover {
       background-color: #015a8a;
+    }
+    #login-section > div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
     }
 
     /* Gallery */
     .gallery {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
-      justify-content: start;
+      gap: 14px;
+      justify-content: center;
     }
     .gallery img {
-      width: 150px;
-      height: 100px;
+      width: 140px;
+      height: 95px;
       object-fit: cover;
       border-radius: 10px;
       cursor: pointer;
       box-shadow: 0 3px 8px rgba(0,0,0,0.15);
       transition: transform 0.25s ease, box-shadow 0.25s ease;
       user-select: none;
+      flex-shrink: 0;
     }
     .gallery img:hover {
       transform: scale(1.1);
@@ -212,14 +236,21 @@
       font-style: italic;
       width: 100%;
       user-select: none;
+      text-align: center;
     }
 
     /* Shop items */
+    #shop-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
     #shop-items > div {
       border: 1.5px solid #ddd;
       border-radius: 12px;
-      padding: 15px 18px;
-      width: 200px;
+      padding: 14px 16px;
+      width: 170px;
       text-align: center;
       box-shadow: 0 2px 10px rgba(2,119,189,0.1);
       user-select: none;
@@ -228,6 +259,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      flex-shrink: 0;
     }
     #shop-items > div:hover {
       box-shadow: 0 5px 20px rgba(2,119,189,0.3);
@@ -236,17 +268,17 @@
       margin-top: 0;
       font-weight: 700;
       color: #014f7d;
-      margin-bottom: 12px;
-      font-size: 1.15rem;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
     }
     #shop-items img {
       max-width: 100%;
-      height: 110px;
+      height: 100px;
       object-fit: contain;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       border-radius: 10px;
       background: white;
-      padding: 8px;
+      padding: 6px;
       box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
     }
     #shop-items p {
@@ -270,18 +302,85 @@
       background-color: #026aa7;
     }
 
-    /* Responsive */
-    @media (max-width: 640px) {
-      nav {
-        flex-wrap: wrap;
+    /* Hangar */
+    #hangar-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+    #hangar-grid img {
+      width: 140px;
+      height: 95px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      user-select: none;
+      flex-shrink: 0;
+    }
+    #hangar-grid p {
+      width: 100%;
+      text-align: center;
+      font-style: italic;
+      color: #555;
+      user-select: none;
+    }
+
+    /* Responsive fixes */
+    @media (max-width: 600px) {
+      body {
+        padding: 12px 8px 30px;
+        max-width: 100vw;
+      }
+      header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+      .user-info {
         justify-content: center;
       }
-      #shop-items > div {
-        width: 45vw;
+      nav {
+        justify-content: center;
+        flex-grow: unset;
+        min-width: unset;
+        gap: 6px;
       }
-      .gallery img {
-        width: 45vw;
-        height: 30vw;
+      nav button {
+        flex-grow: unset;
+        min-width: 60px;
+        padding: 9px 8px;
+        font-size: 0.85rem;
+      }
+      #logout-btn {
+        width: 100%;
+        padding: 10px 0;
+        font-size: 1rem;
+      }
+
+      #login-section > div {
+        flex-direction: column;
+      }
+      #login-section button {
+        margin-right: 0;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .gallery img, #hangar-grid img {
+        width: 100px;
+        height: 70px;
+      }
+
+      #shop-items > div {
+        width: 140px;
+        padding: 12px 10px;
+      }
+      #shop-items h3 {
+        font-size: 1rem;
+      }
+      #shop-items img {
+        height: 80px;
       }
     }
   </style>
@@ -290,190 +389,135 @@
 
 <header>
   <div class="user-info">
-    <img src="default-avatar.png" id="avatar" alt="Avatar" />
-    <span id="points">0 pts</span> | <span id="header-credits">0💰</span>
+    <img id="avatar" src="default-avatar.png" alt="Avatar" />
+    <div id="points">0 pts</div>
+    <div id="header-credits" style="margin-left: 15px;">0💰</div>
   </div>
   <nav>
-    <button data-section="photo">📸 Photos</button>
-    <button data-section="shop">🏪 Boutique</button>
-    <button data-section="hangar">🛩️ Hangar</button>
+    <button data-section="photos-section">Photos</button>
+    <button data-section="shop-section">Boutique</button>
+    <button data-section="hangar-section">Hangar</button>
+    <button data-section="login-section">Connexion</button>
   </nav>
   <button id="logout-btn" style="display:none;">Déconnexion</button>
 </header>
 
 <div id="profile-modal">
-  <p><strong>Email :</strong> <span id="profile-email"></span></p>
-  <p><strong>Crédits :</strong> <span id="credits">0</span></p>
-  <p><strong>Points :</strong> <span id="profile-points">0</span></p>
+  <p><strong>Email:</strong> <span id="profile-email">---</span></p>
+  <p><strong>Points:</strong> <span id="profile-points">0</span></p>
+  <p><strong>Crédits:</strong> <span id="profile-credits">0</span></p>
 </div>
 
-<section id="login-section" class="section" style="display:block;">
+<section id="login-section" class="section" style="display:none;">
   <h2>Connexion / Inscription</h2>
   <input type="email" id="email" placeholder="Email" autocomplete="username" />
   <input type="password" id="password" placeholder="Mot de passe" autocomplete="current-password" />
   <div>
-    <button id="login-btn">Connexion</button>
-    <button id="signup-btn">Créer un compte</button>
+    <button id="login-btn">Se connecter</button>
+    <button id="signup-btn">S'inscrire</button>
   </div>
 </section>
 
-<section id="photo" class="section">
-  <h2>📸 Galerie photos</h2>
-  <input type="file" accept="image/*" capture="environment" id="photo-input" style="margin-bottom:20px; border-radius:8px; border:1.5px solid #0277bd; padding:8px; cursor:pointer;" />
-  <div id="gallery" class="gallery"></div>
+<section id="photos-section" class="section" style="display:none;">
+  <h2>Galerie Photos</h2>
+  <input type="file" id="photo-input" accept="image/*" style="margin-bottom: 15px; width: 100%;" />
+  <div class="gallery" id="gallery"></div>
+  <p id="no-photos-msg" style="display:none;">Aucune photo disponible.</p>
 </section>
 
-<section id="shop" class="section">
-  <h2>🏪 Boutique</h2>
-  <div id="shop-items" class="gallery" style="justify-content:flex-start;"></div>
+<section id="shop-section" class="section" style="display:none;">
+  <h2>Boutique</h2>
+  <div id="shop-items"></div>
 </section>
 
-<section id="hangar" class="section">
-  <h2>🛩️ Ton Hangar</h2>
-  <div id="hangar-grid" class="gallery"></div>
+<section id="hangar-section" class="section" style="display:none;">
+  <h2>Hangar</h2>
+  <div id="hangar-grid"></div>
+  <p id="no-hangar-msg" style="display:none;">Ton hangar est vide.</p>
 </section>
 
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-  const supabase = createClient(
-    'https://ixntiwcgvljrjbjnfjti.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4bnRpd2Nndmxqcmpiam5manRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzk2NzcsImV4cCI6MjA2NTc1NTY3N30.lygU6ARA0EO99u3zPNbZ6GgtzmIKUZMcmlsbDLP4kBk'
-  );
+<script>
+  // Mock Supabase auth + DB simulation for example (remplace avec ton vrai code Supabase)
+  const supabase = {
+    auth: {
+      currentUser: null,
+      signInWithPassword: async ({ email, password }) => {
+        if (email === "test@test.com" && password === "123456") {
+          supabase.auth.currentUser = { email, id: "user123" };
+          return { data: { user: supabase.auth.currentUser }, error: null };
+        } else {
+          return { data: null, error: { message: "Identifiants incorrects" } };
+        }
+      },
+      signUp: async ({ email, password }) => {
+        supabase.auth.currentUser = { email, id: "newuser123" };
+        return { data: { user: supabase.auth.currentUser }, error: null };
+      },
+      signOut: async () => {
+        supabase.auth.currentUser = null;
+      },
+      getSession: async () => supabase.auth.currentUser ? { user: supabase.auth.currentUser } : null,
+    }
+  };
 
   let user = null;
-
+  let points = 0;
+  let credits = 0;
   const avatar = document.getElementById('avatar');
-  const profileModal = document.getElementById('profile-modal');
-  const logoutBtn = document.getElementById('logout-btn');
   const pointsDisplay = document.getElementById('points');
   const creditsDisplay = document.getElementById('header-credits');
-  const shopItemsContainer = document.getElementById('shop-items');
-  const gallery = document.getElementById('gallery');
-  const hangarGrid = document.getElementById('hangar-grid');
+  const profileModal = document.getElementById('profile-modal');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  const sections = document.querySelectorAll('section.section');
+  const navButtons = document.querySelectorAll('nav button[data-section]');
+
+  function showSection(id) {
+    sections.forEach(s => s.style.display = (s.id === id) ? 'block' : 'none');
+    if (id === 'login-section') {
+      logoutBtn.style.display = 'none';
+    }
+  }
+
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      showSection(btn.dataset.section);
+    });
+  });
 
   avatar.addEventListener('click', () => {
+    if (!user) return alert("Connecte-toi d'abord");
     profileModal.style.display = profileModal.style.display === 'block' ? 'none' : 'block';
   });
 
-  document.querySelectorAll('nav button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      showSection(btn.getAttribute('data-section'));
-    });
+  document.addEventListener('click', e => {
+    if (!profileModal.contains(e.target) && e.target !== avatar) {
+      profileModal.style.display = 'none';
+    }
   });
 
-  function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    profileModal.style.display = 'none';
-  }
-
   async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
+    const session = await supabase.auth.getSession();
+    if (session && session.user) {
       user = session.user;
-      document.getElementById('login-section').style.display = 'none';
+      points = 125;  // mock points
+      credits = 250; // mock credits
+      avatar.src = 'https://i.pravatar.cc/150?u=' + encodeURIComponent(user.email);
+      pointsDisplay.textContent = points + " pts";
+      creditsDisplay.textContent = credits + "💰";
+      document.getElementById('profile-email').textContent = user.email;
+      document.getElementById('profile-points').textContent = points;
+      document.getElementById('profile-credits').textContent = credits;
+      showSection('photos-section');
       logoutBtn.style.display = 'inline-block';
-      await loadProfile();
-      await loadGallery();
-      await loadShop();
-      await loadHangar();
-      showSection('photo');
     } else {
       user = null;
-      logoutBtn.style.display = 'none';
+      avatar.src = 'default-avatar.png';
+      pointsDisplay.textContent = "0 pts";
+      creditsDisplay.textContent = "0💰";
       showSection('login-section');
+      logoutBtn.style.display = 'none';
     }
-  }
-
-  async function loadProfile() {
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (!profile) return;
-    document.getElementById('credits').textContent = profile.credits || 0;
-    document.getElementById('profile-points').textContent = profile.points || 0;
-    document.getElementById('profile-email').textContent = profile.email;
-    pointsDisplay.textContent = (profile.points || 0) + " pts";
-    creditsDisplay.textContent = (profile.credits || 0) + "💰";
-    avatar.src = profile.avatar_url || 'default-avatar.png';
-  }
-
-  async function loadGallery() {
-    if (!user) return;
-    const { data, error } = await supabase.from('photos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (error) return console.error("Erreur photos:", error);
-    gallery.innerHTML = '';
-    if (data.length === 0) {
-      gallery.innerHTML = "<p>Aucune photo prise</p>";
-      return;
-    }
-    data.forEach(photo => {
-      const img = document.createElement('img');
-      img.src = photo.url;
-      img.alt = "Photo avion";
-      gallery.appendChild(img);
-    });
-  }
-
-  async function loadShop() {
-    const { data, error } = await supabase.from('shop_items').select('*');
-    if (error) return console.error("Erreur boutique:", error);
-    shopItemsContainer.innerHTML = "";
-    data.forEach(item => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <h3>${item.name}</h3>
-        <img src="${item.image_url}" alt="${item.name}" />
-        <p>Prix : ${item.price} crédits</p>
-        <button class="buy-btn" data-name="${item.name}" data-price="${item.price}" data-image="${item.image_url}">Acheter</button>
-      `;
-      shopItemsContainer.appendChild(div);
-    });
-    document.querySelectorAll('.buy-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const name = btn.getAttribute('data-name');
-        const price = parseInt(btn.getAttribute('data-price'));
-        const imgUrl = btn.getAttribute('data-image');
-        await buyItem(name, price, imgUrl);
-      });
-    });
-  }
-
-  async function buyItem(name, price, image_url) {
-    if (!user) return alert("Connectez-vous d'abord");
-    const { data: profile } = await supabase.from('profiles').select('credits').eq('id', user.id).single();
-    if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
-    await supabase.from('profiles').update({ credits: profile.credits - price }).eq('id', user.id);
-    await supabase.from('hangar').insert({ user_id: user.id, plane: name, image_url });
-    alert(`✅ ${name} acheté !`);
-    await loadProfile();
-    await loadHangar();
-  }
-
-  async function loadHangar() {
-    if (!user) return;
-    hangarGrid.innerHTML = '';
-    const [planesRes, photosRes] = await Promise.all([
-      supabase.from('hangar').select('*').eq('user_id', user.id),
-      supabase.from('photos').select('*').eq('user_id', user.id)
-    ]);
-    if (planesRes.error || photosRes.error) {
-      console.error("Erreur récupération hangar/photos:", planesRes.error || photosRes.error);
-      return;
-    }
-    const items = [
-      ...(planesRes.data || []).map(p => ({ type: 'avion', url: p.image_url })),
-      ...(photosRes.data || []).map(p => ({ type: 'photo', url: p.url }))
-    ];
-    if (items.length === 0) {
-      hangarGrid.innerHTML = "<p>Ton hangar est vide pour l’instant.</p>";
-      return;
-    }
-    items.forEach(item => {
-      const img = document.createElement('img');
-      img.src = item.url;
-      img.alt = item.type;
-      hangarGrid.appendChild(img);
-    });
   }
 
   document.getElementById('login-btn').addEventListener('click', async () => {
@@ -491,7 +535,7 @@
     if (!email || !password) return alert("Email et mot de passe requis");
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return alert("Erreur inscription : " + error.message);
-    
+    alert("Compte créé, vérifie ta boîte mail pour confirmer");
   });
 
   logoutBtn.addEventListener('click', async () => {
@@ -504,12 +548,92 @@
     creditsDisplay.textContent = "0💰";
   });
 
-  // Masquer profil si clic en dehors
-  document.addEventListener('click', e => {
-    if (!profileModal.contains(e.target) && e.target !== avatar) {
-      profileModal.style.display = 'none';
+  // Photos gallery simulation
+  const gallery = document.getElementById('gallery');
+  const photoInput = document.getElementById('photo-input');
+  const noPhotosMsg = document.getElementById('no-photos-msg');
+  let photos = [];
+
+  function refreshGallery() {
+    gallery.innerHTML = '';
+    if (photos.length === 0) {
+      noPhotosMsg.style.display = 'block';
+    } else {
+      noPhotosMsg.style.display = 'none';
+      photos.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = "Photo utilisateur";
+        gallery.appendChild(img);
+      });
     }
+  }
+
+  photoInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return alert('Merci de sélectionner une image.');
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      photos.push(evt.target.result);
+      refreshGallery();
+    };
+    reader.readAsDataURL(file);
+    photoInput.value = ''; // reset input
   });
+
+  // Boutique simulation
+  const shopItemsContainer = document.getElementById('shop-items');
+  const shopItems = [
+    { id: 1, name: "Planeur", price: 50, img: "https://cdn-icons-png.flaticon.com/512/34/34627.png" },
+    { id: 2, name: "Jet privé", price: 150, img: "https://cdn-icons-png.flaticon.com/512/2490/2490603.png" },
+    { id: 3, name: "Avion de chasse", price: 300, img: "https://cdn-icons-png.flaticon.com/512/1831/1831624.png" }
+  ];
+
+  function renderShop() {
+    shopItemsContainer.innerHTML = '';
+    shopItems.forEach(item => {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <h3>${item.name}</h3>
+        <img src="${item.img}" alt="${item.name}" />
+        <p>${item.price}💰</p>
+        <button class="buy-btn">Acheter</button>
+      `;
+      const btn = div.querySelector('.buy-btn');
+      btn.addEventListener('click', () => {
+        if (!user) return alert("Connecte-toi pour acheter.");
+        if (credits < item.price) return alert("Pas assez de crédits !");
+        credits -= item.price;
+        creditsDisplay.textContent = credits + "💰";
+        document.getElementById('profile-credits').textContent = credits;
+        alert(`Tu as acheté : ${item.name}`);
+      });
+      shopItemsContainer.appendChild(div);
+    });
+  }
+  renderShop();
+
+  // Hangar simulation (on affiche les items achetés ou photos)
+  const hangarGrid = document.getElementById('hangar-grid');
+  const noHangarMsg = document.getElementById('no-hangar-msg');
+
+  function refreshHangar() {
+    hangarGrid.innerHTML = '';
+    // Pour l'exemple, on affiche les photos dans le hangar
+    if (photos.length === 0) {
+      noHangarMsg.style.display = 'block';
+    } else {
+      noHangarMsg.style.display = 'none';
+      photos.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = "Photo dans hangar";
+        hangarGrid.appendChild(img);
+      });
+    }
+  }
+  refreshHangar();
 
   checkSession();
 </script>
