@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hangar Avion + Galerie Photos</title>
+  <title>Hangar Avion & Galerie</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -70,36 +70,6 @@
     .gallery img:hover {
       transform: scale(1.05);
     }
-    /* Hangar - colonnes par type avion */
-    #hangar-columns {
-      display: flex;
-      gap: 15px;
-    }
-    .hangar-column {
-      flex: 1;
-      background: #f0f4f8;
-      padding: 10px;
-      border-radius: 8px;
-      min-width: 150px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .hangar-column h3 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .plane-item {
-      margin-bottom: 15px;
-      text-align: center;
-    }
-    .plane-item img {
-      width: 100%;
-      border-radius: 6px;
-      cursor: default;
-      transition: transform 0.2s;
-    }
-    .plane-item img:hover {
-      transform: scale(1.05);
-    }
   </style>
 </head>
 <body>
@@ -132,7 +102,7 @@
 </section>
 
 <section id="photo" class="section">
-  <h2>📸 Galerie photos et prise</h2>
+  <h2>📸 Galerie photos</h2>
   <input type="file" accept="image/*" capture="environment" id="photo-input" />
   <div id="gallery" class="gallery"></div>
 </section>
@@ -143,10 +113,8 @@
 </section>
 
 <section id="hangar" class="section">
-  <h2>🛩️ Ton Hangar organisé</h2>
-  <div id="hangar-columns">
-    <!-- Colonnes pour chaque type avion ici -->
-  </div>
+  <h2>🛩️ Ton Hangar</h2>
+  <div id="hangar-grid" class="gallery"></div>
 </section>
 
 <script type="module">
@@ -161,11 +129,11 @@
 
   const avatar = document.getElementById('avatar');
   const profileModal = document.getElementById('profile-modal');
-  const shopItemsContainer = document.getElementById('shop-items');
-  const hangarColumns = document.getElementById('hangar-columns');
   const logoutBtn = document.getElementById('logout-btn');
   const pointsDisplay = document.getElementById('points');
+  const shopItemsContainer = document.getElementById('shop-items');
   const gallery = document.getElementById('gallery');
+  const hangarGrid = document.getElementById('hangar-grid');
 
   avatar.addEventListener('click', () => {
     profileModal.style.display = profileModal.style.display === 'block' ? 'none' : 'block';
@@ -182,7 +150,6 @@
     document.getElementById(id).style.display = 'block';
     profileModal.style.display = 'none';
   }
-  window.showSection = showSection;
 
   async function checkSession() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -191,9 +158,9 @@
       document.getElementById('login-section').style.display = 'none';
       logoutBtn.style.display = 'inline-block';
       await loadProfile();
+      await loadGallery();
       await loadShop();
       await loadHangar();
-      await loadGallery();
       showSection('photo');
     } else {
       user = null;
@@ -212,14 +179,29 @@
     avatar.src = profile.avatar_url || 'default-avatar.png';
   }
 
+  async function loadGallery() {
+    if (!user) return;
+    const { data, error } = await supabase.from('photos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (error) return console.error("Erreur photos:", error);
+    gallery.innerHTML = '';
+    if (data.length === 0) {
+      gallery.innerHTML = "<p>Aucune photo prise</p>";
+      return;
+    }
+    data.forEach(photo => {
+      const img = document.createElement('img');
+      img.src = photo.url;
+      img.alt = "Photo avion";
+      gallery.appendChild(img);
+    });
+  }
+
   async function loadShop() {
     const { data, error } = await supabase.from('shop_items').select('*');
     if (error) return console.error("Erreur boutique:", error);
-
     shopItemsContainer.innerHTML = "";
     data.forEach(item => {
       const div = document.createElement('div');
-      div.className = 'shop-item';
       div.innerHTML = `
         <h3>${item.name}</h3>
         <img src="${item.image_url}" alt="${item.name}" />
@@ -228,8 +210,7 @@
       `;
       shopItemsContainer.appendChild(div);
     });
-
-    shopItemsContainer.querySelectorAll('.buy-btn').forEach(btn => {
+    document.querySelectorAll('.buy-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const name = btn.getAttribute('data-name');
         const price = parseInt(btn.getAttribute('data-price'));
@@ -241,165 +222,82 @@
 
   async function buyItem(name, price, image_url) {
     if (!user) return alert("Connectez-vous d'abord");
-
-    const { data: profile, error } = await supabase.from('profiles').select('credits, planes').eq('id', user.id).single();
-    if (error) return alert("Erreur lors de la récupération du profil : " + error.message);
+    const { data: profile } = await supabase.from('profiles').select('credits').eq('id', user.id).single();
     if (!profile || profile.credits < price) return alert("❌ Crédits insuffisants !");
-
-    const { error: updateError } = await supabase.from('profiles').update({
-      credits: profile.credits - price,
-      planes: (profile.planes || 0) + 1
-    }).eq('id', user.id);
-
-    if (updateError) return alert("Erreur mise à jour crédits : " + updateError.message);
-
-    const { error: insertError } = await supabase.from('hangar').insert({
-      user_id: user.id,
-      plane: name,
-      image_url: image_url
-    });
-
-    if (insertError) return alert("Erreur ajout hangar : " + insertError.message);
-
-    alert(`✅ Vous avez acheté ${name} !`);
+    await supabase.from('profiles').update({ credits: profile.credits - price }).eq('id', user.id);
+    await supabase.from('hangar').insert({ user_id: user.id, plane: name, image_url });
+    alert(`✅ ${name} acheté !`);
     await loadProfile();
     await loadHangar();
   }
 
-  // Hangar organisé en colonnes par type d'avion (Falcon, Fly, Jet)
   async function loadHangar() {
     if (!user) return;
-
     const { data, error } = await supabase.from('hangar').select('*').eq('user_id', user.id);
     if (error) return console.error("Erreur hangar:", error);
-
-    // Organiser par type d'avion (nom de plane)
-    const columns = {
-      Falcon: [],
-      Fly: [],
-      Jet: []
-    };
-
-    data.forEach(item => {
-      // Assigner dans colonne correspondante
-      if (item.plane.toLowerCase().includes('falcon')) columns.Falcon.push(item);
-      else if (item.plane.toLowerCase().includes('fly')) columns.Fly.push(item);
-      else if (item.plane.toLowerCase().includes('jet')) columns.Jet.push(item);
-      else {
-        // Si aucun type, on peut créer ou ajouter dans une colonne 'Autres'
-        if (!columns.Autres) columns.Autres = [];
-        columns.Autres.push(item);
-      }
-    });
-
-    hangarColumns.innerHTML = '';
-
-    for (const colName in columns) {
-      const div = document.createElement('div');
-      div.className = 'hangar-column';
-      div.innerHTML = `<h3>${colName}</h3>`;
-      if (columns[colName].length === 0) {
-        div.innerHTML += "<p>Pas d'avions</p>";
-      } else {
-        columns[colName].forEach(plane => {
-          const planeDiv = document.createElement('div');
-          planeDiv.className = 'plane-item';
-          planeDiv.innerHTML = `
-            <img src="${plane.image_url}" alt="${plane.plane}" />
-            <p>${plane.plane}</p>
-          `;
-          div.appendChild(planeDiv);
-        });
-      }
-      hangarColumns.appendChild(div);
-    }
-  }
-
-  // Chargement galerie photos prises par utilisateur
-  async function loadGallery() {
-    if (!user) return;
-
-    const { data, error } = await supabase.from('photos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (error) return console.error("Erreur photos:", error);
-
-    gallery.innerHTML = '';
-    if (data.length === 0) {
-      gallery.innerHTML = "<p>Aucune photo prise</p>";
+    hangarGrid.innerHTML = '';
+    if (!data || data.length === 0) {
+      hangarGrid.innerHTML = "<p>Pas encore d'avions achetés.</p>";
       return;
     }
-
-    data.forEach(photo => {
+    data.forEach(plane => {
       const img = document.createElement('img');
-      img.src = photo.url;
-      img.alt = "Photo avion";
-      gallery.appendChild(img);
+      img.src = plane.image_url;
+      img.alt = plane.plane;
+      hangarGrid.appendChild(img);
     });
   }
 
-  // Upload photo et créditer utilisateur
   document.getElementById('photo-input').addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file || !user) return alert("Fichier invalide ou non connecté");
-
     const filename = `${user.id}/${Date.now()}-${file.name}`;
     const { error: uploadError } = await supabase.storage.from('photos').upload(filename, file);
     if (uploadError && uploadError.message !== 'The resource already exists') return alert("Erreur d'envoi : " + uploadError.message);
-
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
-
     await supabase.from('photos').insert({ user_id: user.id, url: publicUrl });
-
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     await supabase.from('profiles').update({
       credits: (profile.credits || 0) + 1500,
       points: (profile.points || 0) + 200
     }).eq('id', user.id);
-
     alert("📸 Photo enregistrée !");
-    e.target.value = ""; // reset input
+    e.target.value = "";
     await loadProfile();
     await loadGallery();
   });
 
-  // Login
   document.getElementById('login-btn').addEventListener('click', async () => {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Merci de remplir email et mot de passe");
+    if (!email || !password) return alert("Remplissez les champs");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return alert(error.message);
     await checkSession();
   });
 
-  // Signup
   document.getElementById('signup-btn').addEventListener('click', async () => {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    if (!email || !password) return alert("Merci de remplir email et mot de passe");
+    if (!email || !password) return alert("Remplissez les champs");
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return alert(error.message);
-
     await supabase.from('profiles').insert({
       id: data.user.id,
       email: data.user.email,
       credits: 0,
       points: 0,
-      planes: 0,
       avatar_url: 'default-avatar.png'
     });
     await checkSession();
   });
 
-  // Logout
   logoutBtn.addEventListener('click', async () => {
     await supabase.auth.signOut();
     location.reload();
   });
 
-  window.onload = () => {
-    checkSession();
-  };
+  window.onload = checkSession;
 </script>
 
 </body>
